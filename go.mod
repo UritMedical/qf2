@@ -1,4 +1,4 @@
-module qf
+module github.com/UritMedical/qf/v2
 
 go 1.17
 
