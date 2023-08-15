@@ -4,12 +4,12 @@
  * @Create Date: 2023/8/12 10:20
  */
 
-package qf
+package qf2
 
 import (
-	"qf/bus"
-	. "qf/define"
-	"qf/logger"
+	"github.com/UritMedical/qf2/bus"
+	. "github.com/UritMedical/qf2/define"
+	"github.com/UritMedical/qf2/logger"
 )
 
 func Run(bus QBus, plugins []QPlugin) []error {

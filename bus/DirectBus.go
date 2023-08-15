@@ -8,7 +8,7 @@ package bus
 
 import (
 	"errors"
-	. "qf/define"
+	. "github.com/UritMedical/qf2/define"
 )
 
 //

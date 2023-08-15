@@ -6,7 +6,7 @@
 
 package main
 
-import "qf/define"
+import "github.com/UritMedical/qf2/define"
 
 type pluginB struct {
 	pluginA

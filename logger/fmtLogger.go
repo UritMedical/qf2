@@ -8,7 +8,7 @@ package logger
 
 import (
 	"fmt"
-	. "qf/define"
+	. "github.com/UritMedical/qf2/define"
 	"time"
 )
 

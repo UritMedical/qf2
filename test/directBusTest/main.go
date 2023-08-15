@@ -8,8 +8,8 @@ package main
 
 import (
 	"fmt"
-	"qf"
-	. "qf/define"
+	qf "github.com/UritMedical/qf2"
+	. "github.com/UritMedical/qf2/define"
 )
 
 func main() {

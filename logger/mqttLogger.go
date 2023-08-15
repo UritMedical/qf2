@@ -9,8 +9,8 @@ package logger
 import (
 	"encoding/json"
 	"fmt"
-	. "qf/define"
-	"qf/util/mqtt"
+	. "github.com/UritMedical/qf2/define"
+	"github.com/UritMedical/qf2/util/mqtt"
 	"time"
 )
 
