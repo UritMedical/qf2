@@ -11,7 +11,7 @@ import (
 	qf "github.com/UritMedical/qf2"
 	. "github.com/UritMedical/qf2/define"
 	"github.com/UritMedical/qf2/test/directBusTest/std/api"
-	. "github.com/UritMedical/qf2/test/directBusTest/std/qdefine"
+	. "github.com/UritMedical/qf2/test/directBusTest/std/qDefine"
 	"github.com/UritMedical/qf2/test/directBusTest/std/result"
 	"github.com/UritMedical/qf2/test/directBusTest/std/tube"
 )

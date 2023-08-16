@@ -8,7 +8,7 @@ package result
 
 import (
 	. "github.com/UritMedical/qf2/define"
-	. "github.com/UritMedical/qf2/test/directBusTest/std/qdefine"
+	. "github.com/UritMedical/qf2/test/directBusTest/std/qDefine"
 	"gorm.io/gorm"
 )
 
@@ -26,7 +26,7 @@ func New(db *gorm.DB) QPlugin {
 	}
 	bll.plugin.resultInsert = bll.resultInsert
 	bll.plugin.resultDelete = bll.resultDelete
-	bll.plugin.onTubeDelete = bll.onTubeDelete
+	bll.plugin.onTubeDeleted = bll.onTubeDeleted
 	return bll
 }
 func (b *bll) resultInsert(model Result) QError {
@@ -36,7 +36,7 @@ func (b *bll) resultDelete(id uint64) QError {
 	return b.dao.Delete(id)
 }
 
-func (b *bll) onTubeDelete(tube Tube) {
+func (b *bll) onTubeDeleted(tube Tube) {
 	e := b.dao.deleteWithTube(tube.Id)
 	if e != nil {
 		b.Logger().Error("%v", e)

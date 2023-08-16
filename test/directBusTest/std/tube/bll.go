@@ -8,7 +8,7 @@ package tube
 
 import (
 	. "github.com/UritMedical/qf2/define"
-	. "github.com/UritMedical/qf2/test/directBusTest/std/qdefine"
+	. "github.com/UritMedical/qf2/test/directBusTest/std/qDefine"
 	"gorm.io/gorm"
 )
 
@@ -40,7 +40,7 @@ func (b *bll) tubeDelete(id uint64) QError {
 	}
 	r = b.dao.Delete(id)
 	if r == nil {
-		b.SendNoticeTubeDelete(tube, true)
+		b.SendNoticeTubeDeleted(tube, true)
 	}
 	return r
 }

@@ -9,7 +9,7 @@ package api
 import (
 	"fmt"
 	. "github.com/UritMedical/qf2/define"
-	. "github.com/UritMedical/qf2/test/directBusTest/std/qdefine"
+	. "github.com/UritMedical/qf2/test/directBusTest/std/qDefine"
 )
 
 type Bll struct {
