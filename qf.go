@@ -12,9 +12,9 @@ import (
 	"github.com/UritMedical/qf2/logger"
 )
 
-func Run(bus QBus, plugins []QPlugin) []error {
+func Run(bus QBus, plugins []QPlugin) []QError {
 
-	var errs []error
+	var errs []QError
 	for _, v := range plugins {
 		errs = append(errs, v.Init())
 		v.RegBus(bus)

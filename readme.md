@@ -10,7 +10,7 @@ qf定义包主要包括qf的各种接口定义，hocon解析器，util包等
 ## bus 总线
  bus是qf模块之间连接的纽带，也是整个qf的基础，bus分为直通型总线、本地进程总线（IPC）和网络型总线（RPC）等，分别用于连接单体应用 插件型应用和和分体应用
 
-## adapter 访问器
+## plugin 访问器
 adapter是模块与总线沟通的途径。同样分为直通、插件和网络型三种
 
 ## middleware 中间件
@@ -28,4 +28,3 @@ sdkBuilder 通过读取hocon格式的conf配置文件并基于qf-sdkCore生成qf
 
 ##　qf-PluginBuilder  插件生成器
 pluginBuilder 插件生成器通过读取hocon格式的conf配置文件生成qf插件，分为go型，c#型，python型,c++型等
-

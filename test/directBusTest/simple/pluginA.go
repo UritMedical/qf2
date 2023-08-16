@@ -1,5 +1,5 @@
 /**
- * @Author: Joey
+ * @Author: Joey 不使用代码生成器 裸用qf总线
  * @Description:
  * @Create Date: 2023/8/12 13:46
  */
@@ -36,7 +36,7 @@ func (p *pluginA) GetId() string {
 	return p.name
 }
 
-func (p *pluginA) hello(params map[string]interface{}) (interface{}, error) {
+func (p *pluginA) hello(params map[string]interface{}) (interface{}, QError) {
 	input := params["input"].(string)
 	defer p.SendNotice("topic", false, p.name+" send a async Notice from hello")
 	p.Logger().Debug("%s say Hello with  %s", p.name, input)

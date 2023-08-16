@@ -12,9 +12,9 @@ package define
 //
 type QBus interface {
 	//Plug 接入插件
-	Plug(QPlugin) []error
-	Invoke(route string, args map[string]interface{}) (interface{}, error)
-	SendNotice(topic string, isSync bool, arg interface{}) error
+	Plug(QPlugin) []QError
+	Invoke(route string, args map[string]interface{}) (interface{}, QError)
+	SendNotice(topic string, isSync bool, arg interface{}) QError
 	Logger() QLogger
 }
 
@@ -30,14 +30,14 @@ type QPlugin interface {
 	Apis() map[string]ApiHandler
 	//Subscribes 向总线提供消息订阅声明
 	Subscribes() map[string]NoticeHandler
-	Init() error
-	Stop() error
+	Init() QError
+	Stop() QError
 	//GetId 向总线提供业务唯一编号 自动化测试和log需求
 	GetId() string
 	//Invoke 调用总线上的业务方法
-	Invoke(route string, args map[string]interface{}) (interface{}, error)
+	Invoke(route string, args map[string]interface{}) (interface{}, QError)
 	//SendNotice 向总线上的业务方法
-	SendNotice(topic string, isSync bool, arg interface{}) error
+	SendNotice(topic string, isSync bool, arg interface{}) QError
 	Logger() QLogger
 }
 

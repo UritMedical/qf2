@@ -7,7 +7,7 @@
 package bus
 
 import (
-	"errors"
+	"fmt"
 	. "github.com/UritMedical/qf2/define"
 )
 
@@ -24,8 +24,8 @@ type directBus struct {
 func (bus *directBus) Logger() QLogger {
 	return bus.logger
 }
-func (bus *directBus) Plug(plugin QPlugin) []error {
-	var errs []error
+func (bus *directBus) Plug(plugin QPlugin) []QError {
+	var errs []QError
 	// 注册API
 	apis := plugin.Apis()
 	for k, v := range apis {
@@ -50,11 +50,11 @@ func NewDirect(logger QLogger) QBus {
 	return bus
 }
 
-func (bus *directBus) regApi(k string, v ApiHandler) []error {
-	var errs []error
+func (bus *directBus) regApi(k string, v ApiHandler) []QError {
+	var errs []QError
 	_, b := bus.apiDict[k]
 	if b {
-		errs = append(errs, errors.New("api already exists")) // 重复注册
+		errs = append(errs, Error(ErrorCodeRecordExist, fmt.Sprintf("api %s already exists", k))) // 重复注册
 	}
 	bus.apiDict[k] = v // 注册API
 	return errs
@@ -68,20 +68,20 @@ func (bus *directBus) subscribe(k string, v NoticeHandler) {
 	bus.noticeDict[k] = append(bus.noticeDict[k], v) // 注册消息
 }
 
-func (bus *directBus) Invoke(route string, args map[string]interface{}) (interface{}, error) {
+func (bus *directBus) Invoke(route string, args map[string]interface{}) (interface{}, QError) {
 	function, b := bus.apiDict[route]
 	if !b {
 		bus.logger.Error("invoke api failed api %s not found", route)
-		return nil, errors.New("api not found")
+		return nil, Error(ErrorCodeAPIUndefined, fmt.Sprintf("api %s is undefined", route))
 	}
 	return function(args) // 调用API
 }
 
-func (bus *directBus) SendNotice(topic string, isSync bool, arg interface{}) error {
+func (bus *directBus) SendNotice(topic string, isSync bool, arg interface{}) QError {
 	notice, b := bus.noticeDict[topic]
 	if !b {
 		bus.logger.Error("send notice failed notice %s not found", topic)
-		return errors.New("notice not found")
+		return Error(ErrorCodeNoticeUndefined, fmt.Sprintf("notice %s is undefined", topic))
 	}
 	if isSync {
 		for _, handler := range notice {
