@@ -1,40 +1,85 @@
-/**
- * @Author: Joey
- * @Description:枚举 函数指针等的定义
- * @Create Date: 2023/7/26 13:58
- */
-
 package define
 
-// 注册相关函数定义
-type (
-	ApiHandler    func(map[string]interface{}) (interface{}, error) // API函数指针
-	NoticeHandler func(interface{})                                 // 消息函数指针
-)
+type ApiHandler func(params ...interface{}) (interface{}, error)
 
-type ELogLevel int
+type NoticeHandler func(params ...interface{})
 
-const (
-	ELogLevelDebug = 1
-	ELogLevelInfo  = 2
-	ELogLevelWarn  = 4
-	ELogLevelError = 8
-	ELogLevelFatal = 16
-)
+type QBll interface {
+	//
+	// Stop
+	//  @Description: 释放资源
+	//
+	Stop()
+	//
+	// GetConfig
+	//  @Description: 返回业务的conf内容
+	//
+	GetConfig() string
+	//
+	// Apis
+	//  @Description: 注册API方法
+	//  @return map[string]ApiHandler
+	//
+	Apis() map[string]ApiHandler
+	//
+	// Subscribes
+	//  @Description: 注册订阅方法
+	//  @return map[string]NoticeHandler
+	//
+	Subscribes() map[string]NoticeHandler
+	//
+	// SendNotice
+	//  @Description: 发送消息
+	//  @param topic
+	//  @param params
+	//  @return error
+	//
+	SendNotice(topic string, params ...interface{}) error
+}
 
-func (level ELogLevel) ToString() string {
-	switch level {
-	case ELogLevelDebug:
-		return "debug"
-	case ELogLevelInfo:
-		return "info"
-	case ELogLevelWarn:
-		return "warn"
-	case ELogLevelError:
-		return "error"
-	case ELogLevelFatal:
-		return "fatal"
-	default:
-		return "unknown"
-	}
+type QPlugin interface {
+	//
+	// GetId
+	//  @Description: 返回插件ID
+	//  @return string
+	//
+	GetId() string
+	//
+	// GetVersion
+	//  @Description: 返回插件版本
+	//  @return string
+	//
+	GetVersion() string // 返回插件版本号
+	//
+	// BuildDocument
+	//  @Description: 生成插件conf文档
+	//
+	BuildDocument()
+	//
+	// RegBll
+	//  @Description: 注册业务
+	//  @param bll
+	//
+	RegBll(bll ...QBll)
+	//
+	// BindWrapperInvoke
+	//  @Description: 绑定打包器的外部访问方法
+	//  @param invoke 方法指针
+	//
+	BindWrapperInvoke(invoke func(plugin string, route string, params ...interface{}) (interface{}, error))
+	//
+	// BindWrapperNotice
+	//  @Description: 绑定打包器的发送的消息方法
+	//  @param invoke 方法指针
+	//
+	BindWrapperNotice(notice func(topic string, params ...interface{}) error)
+	//
+	// Invoke
+	//  @Description: 执行方法
+	//  @param route
+	//  @param params
+	//  @return interface{}
+	//  @return error
+	//
+	Invoke(route string, params ...interface{}) (interface{}, error)
 }
