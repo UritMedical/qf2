@@ -10,7 +10,7 @@ _SYNCAPP
 /front/electron
 /back/test.go
 /back/bll/config
-/back/bll/data
+/back/bll/values
 /back/bll/database
 /back/bll/log_test.go
 /back/bll/log
