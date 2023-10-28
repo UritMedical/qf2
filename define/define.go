@@ -4,14 +4,14 @@ import (
 	"reflect"
 )
 
-type QAppAdapter interface {
+type QAdapter interface {
 	RegApi(name string, handler QApiHandler)
 	RegSubscribe(name string, handler QNoticeHandler)
 	SendNotice(topic string, payload interface{})
 	Invoke(name string, params []interface{}, of reflect.Type) interface{}
 }
 
-type QBll interface {
+type QSvc interface {
 	Init()
 	Bind()
 	Stop()

@@ -2,8 +2,8 @@ package qdb
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/UritMedical/qf2/utils/qreflect"
-	"github.com/pkg/errors"
 	"strings"
 )
 

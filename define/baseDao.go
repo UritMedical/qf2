@@ -2,7 +2,6 @@ package define
 
 import (
 	"errors"
-	"fmt"
 	"github.com/UritMedical/qf2/utils/qreflect"
 	"gorm.io/gorm"
 )
@@ -11,40 +10,18 @@ type DbSimple struct {
 	Id uint64 `gorm:"primaryKey"` // 唯一号
 }
 
-type DbModel struct {
+type DbFull struct {
 	Id       uint64   `gorm:"primaryKey"` // 唯一号
 	LastTime DateTime `gorm:"index"`      // 最后操作时间时间
 	Summary  string   // 摘要
 	FullInfo string   // 其他扩展内容
 }
 
-// Other
-//
-//	@Description: 其他数据
-//	@return map[string]interface{}
-func (model DbModel) Other() Expand {
-	ref := qreflect.New(model)
-	return ref.ToMapExpandAll()
-}
-
-func (model DbModel) FromModel(obj any) {
-	fmt.Println(model)
-}
-
-type Expand map[string]interface{}
-
-func (expand Expand) GetString(key string) string {
-	if str, ok := expand[key].(string); ok {
-		return str
-	}
-	return ""
-}
-
 type BaseDao[T any] struct {
 	db *gorm.DB
 }
 
-func NewBaseDao[T any](db *gorm.DB) *BaseDao[T] {
+func NewDao[T any](db *gorm.DB) *BaseDao[T] {
 	// 主动创建数据库
 	err := db.AutoMigrate(new(T))
 	if err != nil {

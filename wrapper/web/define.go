@@ -7,11 +7,11 @@ import (
 )
 
 type WebParams struct {
-	AppInitFunc []func(adapter define.QAppAdapter)
-	Bll         define.QBll
+	AppInitFunc []func(adapter define.QAdapter)
+	Bll         define.QSvc
 }
 
-func LoadParams(bll define.QBll, initFunc ...func(adapter define.QAppAdapter)) WebParams {
+func LoadParams(bll define.QSvc, initFunc ...func(adapter define.QAdapter)) WebParams {
 	setting := WebParams{
 		AppInitFunc: initFunc,
 		Bll:         bll,
