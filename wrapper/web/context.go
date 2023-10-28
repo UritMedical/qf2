@@ -45,6 +45,11 @@ func (c *context) GetUInt(key string) uint64 {
 	return num
 }
 
+func (c *context) GetByte(key string) byte {
+	num, _ := strconv.ParseInt(c.GetString(key), 10, 8)
+	return byte(num)
+}
+
 func (c *context) GetBool(key string) bool {
 	value := strings.ToLower(c.GetString(key))
 	if value == "true" || value == "1" {
@@ -53,8 +58,17 @@ func (c *context) GetBool(key string) bool {
 	return false
 }
 
-func (c *context) GetAny(key string) any {
-	return c.values.getValue(key)
+func (c *context) GetStruct(key string, objType reflect.Type) any {
+	val := c.values.getValue(key)
+	// 先转为json
+	js, _ := json.Marshal(val)
+	// 创建新的对象
+	ptrObj := reflect.New(objType).Interface()
+	// 再反转
+	_ = json.Unmarshal(js, ptrObj)
+	// 返回非指针对象
+	obj := reflect.ValueOf(ptrObj).Elem().Interface()
+	return obj
 }
 
 func (c *context) loadValues() {
@@ -86,6 +100,10 @@ func (c *context) loadValues() {
 		if len(v) > 0 {
 			c.values.setInputValue(k, v[0])
 		}
+	}
+	// 解析路由参数
+	for _, v := range c.gin.Params {
+		c.values.setInputValue(v.Key, v.Value)
 	}
 	// 解析Headers
 	for k, v := range c.gin.Request.Header {

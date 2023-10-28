@@ -21,8 +21,9 @@ type QContext interface {
 	GetString(key string) string
 	GetInt(key string) int
 	GetUInt(key string) uint64
+	GetByte(key string) byte
 	GetBool(key string) bool
-	GetAny(key string) any
+	GetStruct(key string, objType reflect.Type) any
 }
 
 type QFail interface {

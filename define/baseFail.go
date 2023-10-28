@@ -75,7 +75,7 @@ func (r Refuse) Code() int {
 }
 
 func (r Refuse) Desc() string {
-	return r.Error()
+	return r.desc
 }
 
 func (r Refuse) Error() string {

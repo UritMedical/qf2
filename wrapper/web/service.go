@@ -76,12 +76,12 @@ func (gw *ginWeb) initPlugin() {
 }
 
 func (gw *ginWeb) initRoute() {
-	for url, tp := range gw.adapter.getRoutes() {
-		fullUrl := "/" + url
+	for _, route := range gw.adapter.getRoutes() {
+		fullUrl := "/" + route.Url
 		if gw.setting.DefGroup != "" {
-			fullUrl = "/" + gw.setting.DefGroup + "/" + url
+			fullUrl = "/" + gw.setting.DefGroup + "/" + route.Url
 		}
-		switch tp {
+		switch route.Type {
 		case "get":
 			gw.engine.GET(fullUrl, gw.apiRequest)
 		case "post":

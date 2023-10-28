@@ -27,3 +27,8 @@ func loadSetting() *setting {
 	}
 	return setting
 }
+
+type route struct {
+	Url  string
+	Type string
+}

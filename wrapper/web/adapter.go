@@ -30,8 +30,8 @@ func (a *adapter) RegApi(name string, handler define.QApiHandler) {
 	a.apiHandlers[name] = handler
 }
 
-func (a *adapter) getRoutes() map[string]string {
-	routes := map[string]string{}
+func (a *adapter) getRoutes() []route {
+	routes := make([]route, 0)
 	for k, _ := range a.apiHandlers {
 		sp := strings.Split(k, "_")
 		// 生成地址
@@ -41,13 +41,15 @@ func (a *adapter) getRoutes() map[string]string {
 		}
 		url = strings.Trim(url, "/")
 		// 添加到字典
-		routes[url] = strings.ToLower(sp[len(sp)-1])
+		routes = append(routes, route{url, strings.ToLower(sp[len(sp)-1])})
 	}
 	return routes
 }
 
 func (a *adapter) doApi(ctx *context) (interface{}, define.QFail) {
-	name := strings.Trim(ctx.gin.FullPath(), "/") + "_" + strings.ToLower(ctx.gin.Request.Method)
+	url := strings.Trim(ctx.gin.FullPath(), "/")
+	url = strings.Replace(url, "/", "_", -1)
+	name := url + "_" + strings.ToLower(ctx.gin.Request.Method)
 	if handler, ok := a.apiHandlers[name]; ok {
 		return handler(ctx)
 	}
