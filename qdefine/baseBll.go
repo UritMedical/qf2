@@ -1,4 +1,4 @@
-package define
+package qdefine
 
 type BaseBll struct {
 }

@@ -1,4 +1,4 @@
-package define
+package qdefine
 
 import (
 	"fmt"

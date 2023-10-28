@@ -1,4 +1,4 @@
-package web
+package qweb
 
 import (
 	"encoding/json"

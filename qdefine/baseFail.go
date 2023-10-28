@@ -1,4 +1,4 @@
-package define
+package qdefine
 
 const (
 	ErrorCodeSubmit  = iota + 500 // 提交操作失败（增删改）

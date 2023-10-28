@@ -1,4 +1,4 @@
-package define
+package qdefine
 
 import (
 	"errors"
@@ -145,16 +145,16 @@ func (dao *BaseDao[T]) GetModel(id uint64) (*T, error) {
 //	@param id
 //	@return bool
 //	@return error
-func (dao *BaseDao[T]) CheckExist(id uint64) (bool, error) {
+func (dao *BaseDao[T]) CheckExist(id uint64) bool {
 	// 创建空对象
 	model := new(T)
 	// 查询
 	result := dao.DB().Where("id = ?", id).Find(model)
 	// 如果异常或者未查询到任何数据
 	if result.Error != nil || result.RowsAffected == 0 {
-		return false, result.Error
+		return false
 	}
-	return true, nil
+	return true
 }
 
 // GetList

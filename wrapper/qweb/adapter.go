@@ -1,19 +1,19 @@
-package web
+package qweb
 
 import (
-	"github.com/UritMedical/qf2/define"
+	"github.com/UritMedical/qf2/qdefine"
 	"reflect"
 	"strings"
 )
 
 func newAdapter() *adapter {
 	return &adapter{
-		apiHandlers: map[string]define.QApiHandler{},
+		apiHandlers: map[string]qdefine.QApiHandler{},
 	}
 }
 
 type adapter struct {
-	apiHandlers map[string]define.QApiHandler
+	apiHandlers map[string]qdefine.QApiHandler
 }
 
 // RegApi
@@ -21,7 +21,7 @@ type adapter struct {
 //	@Description: 支持API方法
 //	@param name 方法名称
 //	@param handler 方法指针
-func (a *adapter) RegApi(name string, handler define.QApiHandler) {
+func (a *adapter) RegApi(name string, handler qdefine.QApiHandler) {
 	name = strings.ToLower(name)
 	// 去掉root
 	if strings.HasPrefix(name, "root_") {
@@ -46,7 +46,7 @@ func (a *adapter) getRoutes() []route {
 	return routes
 }
 
-func (a *adapter) doApi(ctx *context) (interface{}, define.QFail) {
+func (a *adapter) doApi(ctx *context) (interface{}, qdefine.QFail) {
 	url := strings.Trim(ctx.gin.FullPath(), "/")
 	url = strings.Replace(url, "/", "_", -1)
 	name := url + "_" + strings.ToLower(ctx.gin.Request.Method)
@@ -56,7 +56,7 @@ func (a *adapter) doApi(ctx *context) (interface{}, define.QFail) {
 	return nil, nil
 }
 
-func (a *adapter) RegSubscribe(name string, handler define.QNoticeHandler) {
+func (a *adapter) RegSubscribe(name string, handler qdefine.QNoticeHandler) {
 
 }
 

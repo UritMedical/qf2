@@ -1,23 +1,9 @@
-package web
+package qweb
 
 import (
-	"github.com/UritMedical/qf2/define"
 	"github.com/UritMedical/qf2/utils/qconfig"
 	"github.com/UritMedical/qf2/utils/qio"
 )
-
-type WebParams struct {
-	AppInitFunc []func(adapter define.QAdapter)
-	Bll         define.QSvc
-}
-
-func LoadParams(bll define.QSvc, initFunc ...func(adapter define.QAdapter)) WebParams {
-	setting := WebParams{
-		AppInitFunc: initFunc,
-		Bll:         bll,
-	}
-	return setting
-}
 
 type setting struct {
 	Port        int
