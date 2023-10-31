@@ -3,9 +3,10 @@ package qweb
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/UritMedical/qf2/qdefine"
 	"github.com/gin-gonic/gin"
 	"github.com/gobeam/stringy"
-	"io/ioutil"
+	"io"
 	"reflect"
 	"strconv"
 	"strings"
@@ -18,8 +19,11 @@ type context struct {
 
 func newContext(ginCtx *gin.Context) *context {
 	ctx := &context{
-		gin:    ginCtx,
-		values: &values{},
+		gin: ginCtx,
+		values: &values{
+			Inputs: make([]map[string]interface{}, 0),
+			//Header: map[string]interface{}{},
+		},
 	}
 	// 加载gin的上下文中的数据
 	ctx.loadValues()
@@ -58,6 +62,28 @@ func (c *context) GetBool(key string) bool {
 	return false
 }
 
+func (c *context) GetDate(key string) qdefine.Date {
+	model := struct {
+		Time qdefine.Date
+	}{}
+	err := json.Unmarshal([]byte(c.GetString(key)), &model)
+	if err != nil {
+		return 0
+	}
+	return model.Time
+}
+
+func (c *context) GetTime(key string) qdefine.DateTime {
+	model := struct {
+		Time qdefine.DateTime
+	}{}
+	err := json.Unmarshal([]byte(c.GetString(key)), &model)
+	if err != nil {
+		return 0
+	}
+	return model.Time
+}
+
 func (c *context) GetStruct(key string, objType reflect.Type) any {
 	val := c.values.getValue(key)
 	// 先转为json
@@ -76,8 +102,8 @@ func (c *context) loadValues() {
 	contentType := c.gin.Request.Header.Get("Content-Type")
 	if strings.HasPrefix(contentType, "application/json") {
 		// 处理 JSON 数据
-		if body, e := ioutil.ReadAll(c.gin.Request.Body); e == nil && len(body) > 0 {
-			err := c.values.loadInput(body)
+		if body, e := io.ReadAll(c.gin.Request.Body); e == nil && len(body) > 0 {
+			err := c.values.loadBody(body)
 			if err != nil {
 				return
 			}
@@ -96,7 +122,8 @@ func (c *context) loadValues() {
 		}
 	}
 	// 解析Query
-	for k, v := range c.gin.Request.URL.Query() {
+	querys := c.gin.Request.URL.Query()
+	for k, v := range querys {
 		if len(v) > 0 {
 			c.values.setInputValue(k, v[0])
 		}
@@ -113,9 +140,12 @@ func (c *context) loadValues() {
 	}
 }
 
-type values []map[string]interface{}
+type values struct {
+	Inputs []map[string]interface{}
+	//Header map[string]interface{}
+}
 
-func (d *values) loadInput(body []byte) error {
+func (d *values) loadBody(body []byte) error {
 	var obj interface{}
 	err := json.Unmarshal(body, &obj)
 	if err != nil {
@@ -132,31 +162,35 @@ func (d *values) loadInput(body []byte) error {
 	} else {
 		maps = append(maps, map[string]interface{}{"": obj})
 	}
-	(*d) = maps
+	d.Inputs = maps
 	return nil
 }
 
 func (d *values) setInputValue(key string, value interface{}) {
-	if len((*d)) == 0 {
-		(*d) = append((*d), map[string]interface{}{})
+	if len(d.Inputs) == 0 {
+		d.Inputs = append(d.Inputs, map[string]interface{}{key: value})
 	}
-	for i := 0; i < len((*d)); i++ {
-		(*d)[i][key] = value
+	for i := 0; i < len(d.Inputs); i++ {
+		d.Inputs[i][key] = value
 	}
 }
 
 func (d *values) getValue(key string) interface{} {
-	if len((*d)) == 0 {
+	if len(d.Inputs) == 0 {
 		return nil
 	}
+	if key == "" {
+		return d.Inputs[0]
+	}
+
 	var value interface{}
-	if _, ok := (*d)[0][key]; ok {
+	if v, ok := d.Inputs[0][key]; ok {
 		// 如果存在
-		value = (*d)[0][key]
+		value = v
 	} else {
 		str := stringy.New(key).CamelCase()
 		// 如果不存在，尝试查找
-		for k, v := range (*d)[0] {
+		for k, v := range d.Inputs[0] {
 			if strings.ToLower(str) == strings.ToLower(stringy.New(k).CamelCase()) {
 				value = v
 				break
@@ -164,4 +198,15 @@ func (d *values) getValue(key string) interface{} {
 		}
 	}
 	return value
+}
+
+func (d *values) ToMap() map[string]interface{} {
+	if len(d.Inputs) == 0 {
+		return nil
+	}
+	return d.Inputs[0]
+}
+
+func (d *values) ToMaps() []map[string]interface{} {
+	return d.Inputs
 }

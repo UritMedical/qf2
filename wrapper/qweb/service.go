@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/UritMedical/qf2/qdefine"
 	"github.com/UritMedical/qf2/utils/launcher"
+	"github.com/UritMedical/qf2/utils/qdb"
 	"github.com/UritMedical/qf2/utils/qerror"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -13,29 +14,19 @@ import (
 // Run
 //
 //	@Description: 启动
-//	@param qfSvc
-//	@param bllSvc
-//	@param daoSvc
-//	@param stop
-func Run(qfSvc func(adapter qdefine.QAdapter), bllSvc qdefine.QSvc, daoSvc qdefine.QSvc, stop func()) {
+//	@param startParam
+func Run(startParam *StartParam) {
 	ginWeb := &ginWeb{
-		QfSvc:    qfSvc,
-		BllSvc:   bllSvc,
-		DaoSvc:   daoSvc,
-		stopFunc: stop,
+		startParam: startParam,
 	}
 	launcher.Run(ginWeb.Start, ginWeb.Stop)
 }
 
 type ginWeb struct {
-	QfSvc    func(adapter qdefine.QAdapter)
-	BllSvc   qdefine.QSvc
-	DaoSvc   qdefine.QSvc
-	stopFunc func()
-
-	engine  *gin.Engine
-	setting *setting
-	adapter *adapter
+	startParam *StartParam
+	engine     *gin.Engine
+	setting    *setting
+	adapter    *adapter
 }
 
 func (gw *ginWeb) Start() {
@@ -45,7 +36,7 @@ func (gw *ginWeb) Start() {
 	})
 
 	// 加载配置
-	gw.setting = loadSetting()
+	gw.setting = newSetting(gw.startParam.ConfigPath)
 
 	// 初始化插件
 	gw.initPlugin()
@@ -54,6 +45,9 @@ func (gw *ginWeb) Start() {
 	gw.engine = gin.Default()
 	gw.engine.Use(gw.getCors())
 	gw.initRoute()
+
+	// 保存配置
+	gw.setting.Save()
 
 	// 启动服务
 	go func() {
@@ -65,8 +59,8 @@ func (gw *ginWeb) Start() {
 }
 
 func (gw *ginWeb) Stop() {
-	gw.DaoSvc.Stop()
-	gw.BllSvc.Stop()
+	gw.startParam.DaoSvc.Stop()
+	gw.startParam.BllSvc.Stop()
 }
 
 func (gw *ginWeb) initPlugin() {
@@ -74,15 +68,16 @@ func (gw *ginWeb) initPlugin() {
 	gw.adapter = newAdapter()
 
 	// 初始化Dao
-	gw.DaoSvc.Init()
-	gw.DaoSvc.Bind()
+	qdb.ConfigPath = gw.startParam.ConfigPath
+	gw.startParam.DaoSvc.Init()
+	gw.setting.GormConfig = qdb.Settings
 
 	// 初始化业务
-	gw.BllSvc.Init()
-	gw.QfSvc(gw.adapter)
+	gw.startParam.BllSvc.Init()
+	gw.startParam.QfSvc(gw.adapter)
 
 	// 绑定业务方法
-	gw.BllSvc.Bind()
+	gw.startParam.BllSvc.Bind()
 }
 
 func (gw *ginWeb) initRoute() {
@@ -108,7 +103,7 @@ func (gw *ginWeb) apiRequest(ginCtx *gin.Context) {
 	// 创建上下文
 	ctx := newContext(ginCtx)
 	// 执行方法
-	result, err := gw.adapter.doApi(ctx)
+	result, err := gw.adapter.doApi(ctx, gw.setting.DefGroup)
 	// 返回
 	if err != nil {
 		if e, ok := err.(qdefine.Error); ok {

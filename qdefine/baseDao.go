@@ -44,20 +44,17 @@ func (dao *BaseDao[T]) DB() *gorm.DB {
 //	@param model 对象
 //	@return bool
 //	@return error
-func (dao *BaseDao[T]) Create(model *T) (bool, error) {
+func (dao *BaseDao[T]) Create(model *T) error {
 	ref := qreflect.New(model)
 	if ref.Get("LastTime") == "0001-01-01 00:00:00" {
 		_ = ref.Set("LastTime", NowDateTime())
 	}
 	// 提交
 	result := dao.DB().Create(model)
-	if result.RowsAffected > 0 {
-		return true, nil
-	}
-	if result.Error != nil {
-		return false, result.Error
-	}
-	return false, nil
+	//if result.RowsAffected > 0 {
+	//	return nil
+	//}
+	return result.Error
 }
 
 // Update
@@ -66,7 +63,7 @@ func (dao *BaseDao[T]) Create(model *T) (bool, error) {
 //	@param model 对象
 //	@return bool
 //	@return error
-func (dao *BaseDao[T]) Update(model *T) (bool, error) {
+func (dao *BaseDao[T]) Update(model *T) error {
 	ref := qreflect.New(model)
 	if ref.Get("LastTime") == "0001-01-01 00:00:00" {
 		_ = ref.Set("LastTime", NowDateTime())
@@ -74,12 +71,12 @@ func (dao *BaseDao[T]) Update(model *T) (bool, error) {
 	// 提交
 	result := dao.DB().Updates(model)
 	if result.RowsAffected > 0 {
-		return true, nil
+		return nil
 	}
 	if result.Error != nil {
-		return false, result.Error
+		return result.Error
 	}
-	return false, errors.New("update record does not exist")
+	return errors.New("update record does not exist")
 }
 
 // Save
@@ -88,20 +85,17 @@ func (dao *BaseDao[T]) Update(model *T) (bool, error) {
 //	@param model 对象
 //	@return bool
 //	@return error
-func (dao *BaseDao[T]) Save(model *T) (bool, error) {
+func (dao *BaseDao[T]) Save(model *T) error {
 	ref := qreflect.New(model)
 	if ref.Get("LastTime") == "0001-01-01 00:00:00" {
 		_ = ref.Set("LastTime", NowDateTime())
 	}
 	// 提交
 	result := dao.DB().Save(model)
-	if result.RowsAffected > 0 {
-		return true, nil
-	}
-	if result.Error != nil {
-		return false, result.Error
-	}
-	return false, nil
+	//if result.RowsAffected > 0 {
+	//	return nil
+	//}
+	return result.Error
 }
 
 // Delete
@@ -110,15 +104,16 @@ func (dao *BaseDao[T]) Save(model *T) (bool, error) {
 //	@param id 记录Id
 //	@return bool
 //	@return error
-func (dao *BaseDao[T]) Delete(id uint64) (bool, error) {
+func (dao *BaseDao[T]) Delete(id uint64) error {
 	result := dao.DB().Where("id = ?", id).Delete(new(T))
-	if result.RowsAffected > 0 {
-		return true, nil
-	}
-	if result.Error != nil {
-		return false, result.Error
-	}
-	return false, errors.New("delete record does not exist")
+	return result.Error
+	//if result.RowsAffected > 0 {
+	//	return nil
+	//}
+	//if result.Error != nil {
+	//	return result.Error
+	//}
+	//return errors.New("delete record does not exist")
 }
 
 // GetModel
@@ -168,7 +163,7 @@ func (dao *BaseDao[T]) GetList(startId uint64, maxCount int) ([]*T, error) {
 	list := make([]*T, 0)
 	// 查询
 	result := dao.DB().Limit(int(maxCount)).Offset(int(startId)).Find(&list)
-	if result.Error != nil {
+	if result.Error != nil || result.RowsAffected == 0 {
 		return nil, result.Error
 	}
 	return list, nil
@@ -183,7 +178,7 @@ func (dao *BaseDao[T]) GetAll() ([]*T, error) {
 	list := make([]*T, 0)
 	// 查询
 	result := dao.DB().Find(&list)
-	if result.Error != nil {
+	if result.Error != nil || result.RowsAffected == 0 {
 		return nil, result.Error
 	}
 	return list, nil
@@ -200,7 +195,7 @@ func (dao *BaseDao[T]) GetCondition(query interface{}, args ...interface{}) (*T,
 	model := new(T)
 	// 查询
 	result := dao.DB().Where(query, args).Find(model)
-	if result.Error != nil {
+	if result.Error != nil || result.RowsAffected == 0 {
 		return nil, result.Error
 	}
 	return model, nil
@@ -217,7 +212,7 @@ func (dao *BaseDao[T]) GetConditions(query interface{}, args ...interface{}) ([]
 	list := make([]*T, 0)
 	// 查询
 	result := dao.DB().Where(query, args).Find(&list)
-	if result.Error != nil {
+	if result.Error != nil || result.RowsAffected == 0 {
 		return nil, result.Error
 	}
 	return list, nil

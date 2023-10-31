@@ -1,6 +1,8 @@
 package qweb
 
 import (
+	"encoding/json"
+	"fmt"
 	"github.com/UritMedical/qf2/qdefine"
 	"reflect"
 	"strings"
@@ -46,11 +48,15 @@ func (a *adapter) getRoutes() []route {
 	return routes
 }
 
-func (a *adapter) doApi(ctx *context) (interface{}, qdefine.QFail) {
-	url := strings.Trim(ctx.gin.FullPath(), "/")
+func (a *adapter) doApi(ctx *context, defGroup string) (interface{}, qdefine.QFail) {
+	url := ctx.gin.FullPath()
+	url = strings.Replace(url, defGroup, "", 1)
+	url = strings.Trim(url, "/")
 	url = strings.Replace(url, "/", "_", -1)
 	name := url + "_" + strings.ToLower(ctx.gin.Request.Method)
 	if handler, ok := a.apiHandlers[name]; ok {
+		js, _ := json.Marshal(ctx.values.ToMap())
+		fmt.Println(ctx.gin.FullPath(), string(js))
 		return handler(ctx)
 	}
 	return nil, nil

@@ -7,9 +7,9 @@ import (
 	"strings"
 )
 
-func Marshal[T any](apiModel any) T {
+func Marshal[T any](apiTypesStruct any) T {
 	// 先将apiModel转为字典
-	js, _ := json.Marshal(apiModel)
+	js, _ := json.Marshal(apiTypesStruct)
 	values := map[string]interface{}{}
 	_ = json.Unmarshal(js, &values)
 	// 在写入到数据库Model

@@ -11,9 +11,14 @@ type QAdapter interface {
 	Invoke(name string, params []interface{}, of reflect.Type) interface{}
 }
 
-type QSvc interface {
+type QBllSvc interface {
 	Init()
 	Bind()
+	Stop()
+}
+
+type QDaoSvc interface {
+	Init()
 	Stop()
 }
 
@@ -23,6 +28,8 @@ type QContext interface {
 	GetUInt(key string) uint64
 	GetByte(key string) byte
 	GetBool(key string) bool
+	GetDate(key string) Date
+	GetTime(key string) DateTime
 	GetStruct(key string, objType reflect.Type) any
 }
 
