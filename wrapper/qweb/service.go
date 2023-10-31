@@ -15,7 +15,7 @@ import (
 //
 //	@Description: 启动
 //	@param startParam
-func Run(startParam *StartParam) {
+func Run(startParam StartParam) {
 	ginWeb := &ginWeb{
 		startParam: startParam,
 	}
@@ -23,7 +23,7 @@ func Run(startParam *StartParam) {
 }
 
 type ginWeb struct {
-	startParam *StartParam
+	startParam StartParam
 	engine     *gin.Engine
 	setting    *setting
 	adapter    *adapter
@@ -43,11 +43,14 @@ func (gw *ginWeb) Start() {
 
 	// 初始化服务
 	gw.engine = gin.Default()
-	gw.engine.Use(gw.getCors())
+	gw.engine.Use(gw.getCors())       // 支持跨域
+	gw.engine.Use(gw.apiMiddleware()) // 加载中间件
 	gw.initRoute()
 
 	// 保存配置
 	gw.setting.Save()
+
+	// 接收启动器传入参数
 
 	// 启动服务
 	go func() {
@@ -59,8 +62,10 @@ func (gw *ginWeb) Start() {
 }
 
 func (gw *ginWeb) Stop() {
-	gw.startParam.DaoSvc.Stop()
-	gw.startParam.BllSvc.Stop()
+	for _, svc := range gw.startParam.Svcs {
+		svc.DaoSvc.Stop()
+		svc.BllSvc.Stop()
+	}
 }
 
 func (gw *ginWeb) initPlugin() {
@@ -69,15 +74,21 @@ func (gw *ginWeb) initPlugin() {
 
 	// 初始化Dao
 	qdb.ConfigPath = gw.startParam.ConfigPath
-	gw.startParam.DaoSvc.Init()
+	for _, svc := range gw.startParam.Svcs {
+		svc.DaoSvc.Init()
+	}
 	gw.setting.GormConfig = qdb.Settings
 
 	// 初始化业务
-	gw.startParam.BllSvc.Init()
-	gw.startParam.QfSvc(gw.adapter)
+	for _, svc := range gw.startParam.Svcs {
+		svc.BllSvc.Init()
+		svc.QfSvc(gw.adapter)
+	}
 
 	// 绑定业务方法
-	gw.startParam.BllSvc.Bind()
+	for _, svc := range gw.startParam.Svcs {
+		svc.BllSvc.Bind()
+	}
 }
 
 func (gw *ginWeb) initRoute() {
@@ -115,6 +126,32 @@ func (gw *ginWeb) apiRequest(ginCtx *gin.Context) {
 		}
 	} else {
 		gw.returnOk(ginCtx, result)
+	}
+}
+
+func (gw *ginWeb) apiMiddleware() gin.HandlerFunc {
+	return func(ginCtx *gin.Context) {
+		// 创建上下文
+		ctx := newContext(ginCtx)
+		name := gw.adapter.formatUrlToName(ctx, gw.setting.DefGroup)
+		var err error
+		for _, svc := range gw.startParam.Svcs {
+			err = svc.BllSvc.Middleware(name, ctx)
+			// 拒绝
+			if err != nil {
+				if e, ok := err.(qdefine.Error); ok {
+					gw.returnError(ginCtx, e)
+				} else if r, ok := err.(qdefine.Refuse); ok {
+					gw.returnRefuse(ginCtx, r)
+				} else {
+					gw.returnError(ginCtx, qdefine.NewError(500, errors.New("未知的错误类型")))
+				}
+				ginCtx.Abort()
+				return
+			}
+		}
+		// 继续
+		ginCtx.Next()
 	}
 }
 

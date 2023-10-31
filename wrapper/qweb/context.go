@@ -1,6 +1,7 @@
 package qweb
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/UritMedical/qf2/qdefine"
@@ -107,7 +108,10 @@ func (c *context) loadValues() {
 			if err != nil {
 				return
 			}
+			// 将读取的内容重新放入请求体
+			c.gin.Request.Body = io.NopCloser(io.NopCloser(bytes.NewBuffer(body)))
 		}
+
 	} else if strings.HasPrefix(contentType, "multipart/form-data") {
 		// 处理表单数据
 		form, err := c.gin.MultipartForm()

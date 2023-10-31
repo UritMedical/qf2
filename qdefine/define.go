@@ -8,12 +8,13 @@ type QAdapter interface {
 	RegApi(name string, handler QApiHandler)
 	RegSubscribe(name string, handler QNoticeHandler)
 	SendNotice(topic string, payload interface{})
-	Invoke(name string, params []interface{}, of reflect.Type) interface{}
+	Invoke(appName, funcName string, header, query, body map[string]interface{}) (interface{}, QFail)
 }
 
 type QBllSvc interface {
 	Init()
 	Bind()
+	Middleware(funcName string, ctx QContext) QFail
 	Stop()
 }
 

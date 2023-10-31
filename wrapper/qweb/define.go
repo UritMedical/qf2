@@ -9,19 +9,28 @@ import (
 
 type StartParam struct {
 	ConfigPath string
-	QfSvc      func(adapter qdefine.QAdapter)
-	BllSvc     qdefine.QBllSvc
-	DaoSvc     qdefine.QDaoSvc
 	Stop       func()
+	Svcs       map[string]ModeuleSvc
+}
+
+type ModeuleSvc struct {
+	QfSvc  func(adapter qdefine.QAdapter)
+	BllSvc qdefine.QBllSvc
+	DaoSvc qdefine.QDaoSvc
 }
 
 type setting struct {
 	configPath  string
 	Port        int                    `comment:"服务端口"`
 	DefGroup    string                 `comment:"默认路由组"`
-	MqClient    string                 `comment:"MQ服务地址"`
 	GormConfig  map[string]qdb.Setting `comment:"gorm配置"`
+	CallConfig  callConfig             `comment:"插件间api访问地址，如果是通过启动器统一启动，则无需配置"`
 	OtherConfig otherConfig            `comment:"其他配置"`
+}
+
+type callConfig struct {
+	MqClient string
+	ApiUrls  map[string]string
 }
 
 type otherConfig struct {
@@ -32,7 +41,7 @@ type otherConfig struct {
 func newSetting(configPath string) *setting {
 	s := &setting{
 		Port:     10001,
-		DefGroup: "",
+		DefGroup: "api",
 	}
 	s.OtherConfig = otherConfig{
 		JsonDateFormat: "yyyy-MM-dd",

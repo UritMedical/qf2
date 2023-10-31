@@ -20,7 +20,7 @@ const (
 
 var refuseCodeTextMap = map[int]string{
 	RefuseCodeParamInvalid:     "传入的参数无效",
-	RefuseCodeTokenInvalid:     "Token无效或过期",
+	RefuseCodeTokenInvalid:     "Token无效或过期，请重新登录",
 	RefuseCodePermissionDenied: "权限不足，拒绝访问",
 }
 

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/UritMedical/qf2/qdefine"
-	"reflect"
+	"sort"
 	"strings"
 )
 
@@ -45,15 +45,24 @@ func (a *adapter) getRoutes() []route {
 		// 添加到字典
 		routes = append(routes, route{url, strings.ToLower(sp[len(sp)-1])})
 	}
+	// 排序
+	sort.Slice(routes, func(i, j int) bool {
+		return routes[i].Url > routes[j].Url
+	})
 	return routes
 }
 
-func (a *adapter) doApi(ctx *context, defGroup string) (interface{}, qdefine.QFail) {
-	url := ctx.gin.FullPath()
+func (a *adapter) formatUrlToName(ctx *context, defGroup string) string {
+	url := ctx.gin.Request.URL.Path
 	url = strings.Replace(url, defGroup, "", 1)
 	url = strings.Trim(url, "/")
 	url = strings.Replace(url, "/", "_", -1)
 	name := url + "_" + strings.ToLower(ctx.gin.Request.Method)
+	return name
+}
+
+func (a *adapter) doApi(ctx *context, defGroup string) (interface{}, qdefine.QFail) {
+	name := a.formatUrlToName(ctx, defGroup)
 	if handler, ok := a.apiHandlers[name]; ok {
 		js, _ := json.Marshal(ctx.values.ToMap())
 		fmt.Println(ctx.gin.FullPath(), string(js))
@@ -70,6 +79,6 @@ func (a *adapter) SendNotice(topic string, payload interface{}) {
 
 }
 
-func (a *adapter) Invoke(name string, params []interface{}, of reflect.Type) interface{} {
-	return nil
+func (a *adapter) Invoke(appName, funcName string, header, query, body map[string]interface{}) (interface{}, qdefine.QFail) {
+	return nil, nil
 }
