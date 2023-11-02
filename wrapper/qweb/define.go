@@ -8,9 +8,10 @@ import (
 )
 
 type StartParam struct {
-	ConfigPath string
-	Stop       func()
-	Svcs       map[string]ModeuleSvc
+	ConfigPath     string
+	Stop           func()
+	Svcs           []ModeuleSvc
+	ReferencesInit func(adapter qdefine.QAdapter)
 }
 
 type ModeuleSvc struct {
@@ -20,12 +21,12 @@ type ModeuleSvc struct {
 }
 
 type setting struct {
-	configPath  string
-	Port        int                    `comment:"服务端口"`
-	DefGroup    string                 `comment:"默认路由组"`
-	GormConfig  map[string]qdb.Setting `comment:"gorm配置"`
-	CallConfig  callConfig             `comment:"插件间api访问地址，如果是通过启动器统一启动，则无需配置"`
-	OtherConfig otherConfig            `comment:"其他配置"`
+	configPath string
+	Port       int                    `comment:"服务端口"`
+	DefGroup   string                 `comment:"默认路由组"`
+	GormConfig map[string]qdb.Setting `comment:"gorm配置"`
+	//CallConfig  callConfig             `comment:"插件间api访问地址，如果是通过启动器统一启动，则无需配置"`
+	OtherConfig otherConfig `comment:"其他配置"`
 }
 
 type callConfig struct {

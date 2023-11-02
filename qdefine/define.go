@@ -8,7 +8,7 @@ type QAdapter interface {
 	RegApi(name string, handler QApiHandler)
 	RegSubscribe(name string, handler QNoticeHandler)
 	SendNotice(topic string, payload interface{})
-	Invoke(appName, funcName string, header, query, body map[string]interface{}) (interface{}, QFail)
+	Invoke(funcName string, params map[string]interface{}) (interface{}, QFail)
 }
 
 type QBllSvc interface {
@@ -43,3 +43,11 @@ type QFail interface {
 type QApiHandler func(ctx QContext) (interface{}, QFail)
 
 type QNoticeHandler func(ctx QContext)
+
+// File
+// @Description: 文件
+type File struct {
+	Name string // 文件名
+	Size int64  // 文件大小
+	Data []byte // 内容
+}

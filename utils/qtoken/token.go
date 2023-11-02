@@ -31,7 +31,9 @@ func GenerateToken(content Content, ttl int64) (string, error) {
 
 	now := time.Now()
 	claims["i"] = content.Id
-	claims["r"] = content.Roles
+	if content.Roles != nil {
+		claims["r"] = content.Roles
+	}
 	claims["e"] = jwt.NewNumericDate(now.Add(time.Duration(ttl) * time.Hour))
 	if content.Customs != nil {
 		js, _ := json.Marshal(content.Customs)

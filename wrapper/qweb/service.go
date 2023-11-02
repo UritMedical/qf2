@@ -9,6 +9,7 @@ import (
 	"github.com/UritMedical/qf2/utils/qerror"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strings"
 )
 
 // Run
@@ -27,6 +28,7 @@ type ginWeb struct {
 	engine     *gin.Engine
 	setting    *setting
 	adapter    *adapter
+	middleware map[string]qdefine.QBllSvc
 }
 
 func (gw *ginWeb) Start() {
@@ -49,8 +51,6 @@ func (gw *ginWeb) Start() {
 
 	// 保存配置
 	gw.setting.Save()
-
-	// 接收启动器传入参数
 
 	// 启动服务
 	go func() {
@@ -80,9 +80,18 @@ func (gw *ginWeb) initPlugin() {
 	gw.setting.GormConfig = qdb.Settings
 
 	// 初始化业务
+	gw.middleware = make(map[string]qdefine.QBllSvc)
 	for _, svc := range gw.startParam.Svcs {
 		svc.BllSvc.Init()
 		svc.QfSvc(gw.adapter)
+
+		// 提取该模块注册的服务前缀，生成每个模块的中间件字段
+		// 用于根据url调用对应模块的中间件
+		pkg := strings.Split(gw.adapter.tmpLastApiName, "_")[0]
+		gw.middleware[pkg] = svc.BllSvc
+	}
+	if gw.startParam.ReferencesInit != nil {
+		gw.startParam.ReferencesInit(gw.adapter)
 	}
 
 	// 绑定业务方法
@@ -97,7 +106,7 @@ func (gw *ginWeb) initRoute() {
 		if gw.setting.DefGroup != "" {
 			fullUrl = "/" + gw.setting.DefGroup + "/" + route.Url
 		}
-		switch route.Type {
+		switch strings.ToLower(route.Type) {
 		case "get":
 			gw.engine.GET(fullUrl, gw.apiRequest)
 		case "post":
@@ -112,7 +121,7 @@ func (gw *ginWeb) initRoute() {
 
 func (gw *ginWeb) apiRequest(ginCtx *gin.Context) {
 	// 创建上下文
-	ctx := newContext(ginCtx)
+	ctx := newContextByGin(ginCtx)
 	// 执行方法
 	result, err := gw.adapter.doApi(ctx, gw.setting.DefGroup)
 	// 返回
@@ -132,11 +141,11 @@ func (gw *ginWeb) apiRequest(ginCtx *gin.Context) {
 func (gw *ginWeb) apiMiddleware() gin.HandlerFunc {
 	return func(ginCtx *gin.Context) {
 		// 创建上下文
-		ctx := newContext(ginCtx)
+		ctx := newContextByGin(ginCtx)
 		name := gw.adapter.formatUrlToName(ctx, gw.setting.DefGroup)
-		var err error
-		for _, svc := range gw.startParam.Svcs {
-			err = svc.BllSvc.Middleware(name, ctx)
+		per := strings.Split(name, "_")[0]
+		if bll, ok := gw.middleware[per]; ok {
+			err := bll.Middleware(name, ctx)
 			// 拒绝
 			if err != nil {
 				if e, ok := err.(qdefine.Error); ok {

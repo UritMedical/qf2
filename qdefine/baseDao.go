@@ -7,7 +7,8 @@ import (
 )
 
 type DbSimple struct {
-	Id uint64 `gorm:"primaryKey"` // 唯一号
+	Id       uint64   `gorm:"primaryKey"` // 唯一号
+	LastTime DateTime `gorm:"index"`      // 最后操作时间时间
 }
 
 type DbFull struct {
@@ -47,14 +48,33 @@ func (dao *BaseDao[T]) DB() *gorm.DB {
 func (dao *BaseDao[T]) Create(model *T) error {
 	ref := qreflect.New(model)
 	if ref.Get("LastTime") == "0001-01-01 00:00:00" {
-		_ = ref.Set("LastTime", NowDateTime())
+		_ = ref.Set("LastTime", NowTime())
 	}
 	// 提交
 	result := dao.DB().Create(model)
-	//if result.RowsAffected > 0 {
-	//	return nil
-	//}
 	return result.Error
+}
+
+// CreateList
+//
+//	@Description: 创建一组列表
+//	@param list
+//	@return error
+func (dao *BaseDao[T]) CreateList(list []T) error {
+	// 启动事务创建
+	err := dao.DB().Transaction(func(tx *gorm.DB) error {
+		for _, model := range list {
+			ref := qreflect.New(model)
+			if ref.Get("LastTime") == "0001-01-01 00:00:00" {
+				_ = ref.Set("LastTime", NowTime())
+			}
+			if err := tx.Create(&model).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	return err
 }
 
 // Update
@@ -66,10 +86,10 @@ func (dao *BaseDao[T]) Create(model *T) error {
 func (dao *BaseDao[T]) Update(model *T) error {
 	ref := qreflect.New(model)
 	if ref.Get("LastTime") == "0001-01-01 00:00:00" {
-		_ = ref.Set("LastTime", NowDateTime())
+		_ = ref.Set("LastTime", NowTime())
 	}
 	// 提交
-	result := dao.DB().Updates(model)
+	result := dao.DB().Model(model).Updates(model)
 	if result.RowsAffected > 0 {
 		return nil
 	}
@@ -88,7 +108,7 @@ func (dao *BaseDao[T]) Update(model *T) error {
 func (dao *BaseDao[T]) Save(model *T) error {
 	ref := qreflect.New(model)
 	if ref.Get("LastTime") == "0001-01-01 00:00:00" {
-		_ = ref.Set("LastTime", NowDateTime())
+		_ = ref.Set("LastTime", NowTime())
 	}
 	// 提交
 	result := dao.DB().Save(model)
@@ -194,7 +214,7 @@ func (dao *BaseDao[T]) GetAll() ([]*T, error) {
 func (dao *BaseDao[T]) GetCondition(query interface{}, args ...interface{}) (*T, error) {
 	model := new(T)
 	// 查询
-	result := dao.DB().Where(query, args).Find(model)
+	result := dao.DB().Where(query, args...).Find(model)
 	if result.Error != nil || result.RowsAffected == 0 {
 		return nil, result.Error
 	}
@@ -211,9 +231,34 @@ func (dao *BaseDao[T]) GetCondition(query interface{}, args ...interface{}) (*T,
 func (dao *BaseDao[T]) GetConditions(query interface{}, args ...interface{}) ([]*T, error) {
 	list := make([]*T, 0)
 	// 查询
-	result := dao.DB().Where(query, args).Find(&list)
+	result := dao.DB().Where(query, args...).Find(&list)
 	if result.Error != nil || result.RowsAffected == 0 {
 		return nil, result.Error
+	}
+	return list, nil
+}
+
+// GetConditions
+//
+//	@Description: 条件查询一组列表
+//	@param maxCount 最大数量
+//	@param query 条件，如 id = ? 或 id IN (?) 等
+//	@param args 条件参数，如 id, ids 等
+//	@return []*T
+//	@return error
+func (dao *BaseDao[T]) GetConditionsLimit(maxCount int, query interface{}, args ...interface{}) ([]*T, error) {
+	list := make([]*T, 0)
+	// 查询
+	if maxCount > 0 {
+		result := dao.DB().Where(query, args...).Limit(maxCount).Find(&list)
+		if result.Error != nil || result.RowsAffected == 0 {
+			return nil, result.Error
+		}
+	} else {
+		result := dao.DB().Where(query, args).Find(&list)
+		if result.Error != nil || result.RowsAffected == 0 {
+			return nil, result.Error
+		}
 	}
 	return list, nil
 }

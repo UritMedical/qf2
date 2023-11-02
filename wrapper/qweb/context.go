@@ -14,20 +14,43 @@ import (
 )
 
 type context struct {
-	gin    *gin.Context
+	url    string
+	method string
 	values *values
 }
 
-func newContext(ginCtx *gin.Context) *context {
+func newContextByRef(funcName string, params map[string]interface{}) *context {
+	sp := strings.Split(funcName, "_")
+	url := ""
+	for i := 0; i < len(sp)-1; i++ {
+		url += strings.ToLower(sp[i]) + "_"
+	}
+	url = strings.Trim(url, "_")
 	ctx := &context{
-		gin: ginCtx,
+		url:    url,
+		method: sp[len(sp)-1],
 		values: &values{
 			Inputs: make([]map[string]interface{}, 0),
-			//Header: map[string]interface{}{},
+		},
+	}
+	if params != nil {
+		for k, v := range params {
+			ctx.values.setInputValue(k, v)
+		}
+	}
+	return ctx
+}
+
+func newContextByGin(ginCtx *gin.Context) *context {
+	ctx := &context{
+		url:    ginCtx.Request.URL.Path,
+		method: ginCtx.Request.Method,
+		values: &values{
+			Inputs: make([]map[string]interface{}, 0),
 		},
 	}
 	// 加载gin的上下文中的数据
-	ctx.loadValues()
+	ctx.loadValues(ginCtx)
 	return ctx
 }
 
@@ -75,14 +98,12 @@ func (c *context) GetDate(key string) qdefine.Date {
 }
 
 func (c *context) GetTime(key string) qdefine.DateTime {
-	model := struct {
-		Time qdefine.DateTime
-	}{}
-	err := json.Unmarshal([]byte(c.GetString(key)), &model)
+	var time qdefine.DateTime
+	err := json.Unmarshal([]byte(c.GetString(key)), &time)
 	if err != nil {
 		return 0
 	}
-	return model.Time
+	return time
 }
 
 func (c *context) GetStruct(key string, objType reflect.Type) any {
@@ -98,23 +119,23 @@ func (c *context) GetStruct(key string, objType reflect.Type) any {
 	return obj
 }
 
-func (c *context) loadValues() {
+func (c *context) loadValues(ginCtx *gin.Context) {
 	// 解析body
-	contentType := c.gin.Request.Header.Get("Content-Type")
+	contentType := ginCtx.Request.Header.Get("Content-Type")
 	if strings.HasPrefix(contentType, "application/json") {
 		// 处理 JSON 数据
-		if body, e := io.ReadAll(c.gin.Request.Body); e == nil && len(body) > 0 {
+		if body, e := io.ReadAll(ginCtx.Request.Body); e == nil && len(body) > 0 {
 			err := c.values.loadBody(body)
 			if err != nil {
 				return
 			}
 			// 将读取的内容重新放入请求体
-			c.gin.Request.Body = io.NopCloser(io.NopCloser(bytes.NewBuffer(body)))
+			ginCtx.Request.Body = io.NopCloser(io.NopCloser(bytes.NewBuffer(body)))
 		}
 
 	} else if strings.HasPrefix(contentType, "multipart/form-data") {
 		// 处理表单数据
-		form, err := c.gin.MultipartForm()
+		form, err := ginCtx.MultipartForm()
 		if err != nil {
 			return
 		}
@@ -126,18 +147,17 @@ func (c *context) loadValues() {
 		}
 	}
 	// 解析Query
-	querys := c.gin.Request.URL.Query()
-	for k, v := range querys {
+	for k, v := range ginCtx.Request.URL.Query() {
 		if len(v) > 0 {
 			c.values.setInputValue(k, v[0])
 		}
 	}
 	// 解析路由参数
-	for _, v := range c.gin.Params {
+	for _, v := range ginCtx.Params {
 		c.values.setInputValue(v.Key, v.Value)
 	}
 	// 解析Headers
-	for k, v := range c.gin.Request.Header {
+	for k, v := range ginCtx.Request.Header {
 		if len(v) > 0 {
 			c.values.setInputValue(k, v[0])
 		}

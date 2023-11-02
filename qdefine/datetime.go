@@ -97,11 +97,11 @@ func (d *Date) UnmarshalJSON(data []byte) error {
 
 type DateTime uint64
 
-// NowDateTime
+// NowTime
 //
 //	@Description: 当前系统时间
 //	@return DateTime
-func NowDateTime() DateTime {
+func NowTime() DateTime {
 	var now DateTime
 	now.FromTime(time.Now().Local())
 	return now
@@ -118,6 +118,57 @@ func (d *DateTime) FromTime(time time.Time) {
 	s := fmt.Sprintf("%04d%02d%02d%02d%02d%02d", t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second())
 	v, _ := strconv.ParseUint(s, 10, 64)
 	*d = DateTime(v)
+}
+
+// DayFirst
+//
+//	@Description: 返回日期的首秒，即 年月日000000
+//	@return DateTime
+func (d DateTime) DayFirstSecond() DateTime {
+	if d == 0 {
+		return 0
+	}
+	str := fmt.Sprintf("%d", d)
+	if len(str) != 14 {
+		str = str + strings.Repeat("0", 14-len(str))
+	}
+	year, _ := strconv.Atoi(str[0:4])
+	month, _ := strconv.Atoi(str[4:6])
+	day, _ := strconv.Atoi(str[6:8])
+	full, _ := strconv.ParseUint(fmt.Sprintf("%02d%02d%02d000000", year, month, day), 10, 64)
+	return DateTime(full)
+}
+
+// DayLastSecond
+//
+//	@Description: 返回日期的最后一秒，即 年月日235959
+//	@return DateTime
+func (d DateTime) DayLastSecond() DateTime {
+	if d == 0 {
+		return 0
+	}
+	str := fmt.Sprintf("%d", d)
+	if len(str) != 14 {
+		str = str + strings.Repeat("0", 14-len(str))
+	}
+	year, _ := strconv.Atoi(str[0:4])
+	month, _ := strconv.Atoi(str[4:6])
+	day, _ := strconv.Atoi(str[6:8])
+	full, _ := strconv.ParseUint(fmt.Sprintf("%02d%02d%02d235959", year, month, day), 10, 64)
+	return DateTime(full)
+}
+
+// Add
+//
+//	@Description: 添加时间
+//	@param duration
+//	@return DateTime
+func (d DateTime) Add(duration time.Duration) DateTime {
+	time := d.ToTime()
+	time = time.Add(duration)
+	var dt DateTime
+	dt.FromTime(time)
+	return dt
 }
 
 // Date

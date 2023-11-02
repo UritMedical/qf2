@@ -1,8 +1,6 @@
 package qweb
 
 import (
-	"encoding/json"
-	"fmt"
 	"github.com/UritMedical/qf2/qdefine"
 	"sort"
 	"strings"
@@ -15,7 +13,8 @@ func newAdapter() *adapter {
 }
 
 type adapter struct {
-	apiHandlers map[string]qdefine.QApiHandler
+	apiHandlers    map[string]qdefine.QApiHandler
+	tmpLastApiName string
 }
 
 // RegApi
@@ -30,6 +29,7 @@ func (a *adapter) RegApi(name string, handler qdefine.QApiHandler) {
 		name = strings.Replace(name, "root_", "", 1)
 	}
 	a.apiHandlers[name] = handler
+	a.tmpLastApiName = name
 }
 
 func (a *adapter) getRoutes() []route {
@@ -53,19 +53,17 @@ func (a *adapter) getRoutes() []route {
 }
 
 func (a *adapter) formatUrlToName(ctx *context, defGroup string) string {
-	url := ctx.gin.Request.URL.Path
+	url := ctx.url
 	url = strings.Replace(url, defGroup, "", 1)
 	url = strings.Trim(url, "/")
 	url = strings.Replace(url, "/", "_", -1)
-	name := url + "_" + strings.ToLower(ctx.gin.Request.Method)
+	name := url + "_" + strings.ToLower(ctx.method)
 	return name
 }
 
 func (a *adapter) doApi(ctx *context, defGroup string) (interface{}, qdefine.QFail) {
 	name := a.formatUrlToName(ctx, defGroup)
 	if handler, ok := a.apiHandlers[name]; ok {
-		js, _ := json.Marshal(ctx.values.ToMap())
-		fmt.Println(ctx.gin.FullPath(), string(js))
 		return handler(ctx)
 	}
 	return nil, nil
@@ -79,6 +77,10 @@ func (a *adapter) SendNotice(topic string, payload interface{}) {
 
 }
 
-func (a *adapter) Invoke(appName, funcName string, header, query, body map[string]interface{}) (interface{}, qdefine.QFail) {
+func (a *adapter) Invoke(funcName string, params map[string]interface{}) (interface{}, qdefine.QFail) {
+	ctx := newContextByRef(funcName, params)
+	if handler, ok := a.apiHandlers[funcName]; ok {
+		return handler(ctx)
+	}
 	return nil, nil
 }

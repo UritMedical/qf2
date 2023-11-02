@@ -8,26 +8,24 @@ import (
 	"time"
 )
 
-//
 // Parse
-//  @Description: 字符串转换为时间
-//  @param valueStr 时间
-//  @param formatStr 格式化串 可以是yyyy/MM/dd HH:mm:ss 或者 yyyy-MM-dd HH:mm:ss:fff等
-//  @return time.Time
-//  @return error
 //
+//	@Description: 字符串转换为时间
+//	@param valueStr 时间
+//	@param formatStr 格式化串 可以是yyyy/MM/dd HH:mm:ss 或者 yyyy-MM-dd HH:mm:ss:fff等
+//	@return time.Time
+//	@return error
 func Parse(valueStr, formatStr string) (time.Time, error) {
 	valueStr = strings.Trim(valueStr, "\"")
 	layout := getLayout(formatStr)
 	return time.ParseInLocation(layout, valueStr, time.Now().Location())
 }
 
-//
 // ToNumber
-//  @Description: 将时间字符串转为数值形式，如20230101
-//  @return uint64
-//  @return error
 //
+//	@Description: 将时间字符串转为数值形式，如20230101
+//	@return uint64
+//	@return error
 func ToNumber(valueStr, formatStr string) (uint64, error) {
 	valueStr = strings.Trim(valueStr, "\"")
 	// 才分格式化串
@@ -40,6 +38,11 @@ func ToNumber(valueStr, formatStr string) (uint64, error) {
 	// 然后从时间字符串中提取所有数值
 	numMap := map[string]string{}
 	exp := regexp.MustCompile(`\d+`).FindAllStringSubmatch(valueStr, -1)
+	tValue, err := strconv.ParseUint(valueStr, 10, 64)
+	// 如果就是存数字，且是时间，则直接返回
+	if len(exp) == 1 && err == nil && (len(valueStr) == 8 || len(valueStr) == 14) {
+		return tValue, nil
+	}
 	for i := 0; i < layLen; i++ {
 		f := "%0" + fmt.Sprintf("%d", len(layouts[i])) + "d"
 		if i < len(exp) && len(exp[i]) > 0 {
@@ -65,13 +68,12 @@ func ToNumber(valueStr, formatStr string) (uint64, error) {
 	return strconv.ParseUint(final, 10, 64)
 }
 
-//
 // ToString
-//  @Description: 转化为字符串
-//  @param value 时间
-//  @param formatStr 格式化串 可以是yyyy/MM/dd HH:mm:ss 或者 yyyy-MM-dd HH:mm:ss:fff等
-//  @return string
 //
+//	@Description: 转化为字符串
+//	@param value 时间
+//	@param formatStr 格式化串 可以是yyyy/MM/dd HH:mm:ss 或者 yyyy-MM-dd HH:mm:ss:fff等
+//	@return string
 func ToString(value time.Time, formatStr string) string {
 	layout := getLayout(formatStr)
 	return value.Format(layout)
