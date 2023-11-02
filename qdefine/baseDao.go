@@ -117,9 +117,6 @@ func (dao *BaseDao[T]) Save(model *T) error {
 	}
 	// 提交
 	result := dao.DB().Save(model)
-	//if result.RowsAffected > 0 {
-	//	return nil
-	//}
 	return result.Error
 }
 
@@ -132,13 +129,17 @@ func (dao *BaseDao[T]) Save(model *T) error {
 func (dao *BaseDao[T]) Delete(id uint64) error {
 	result := dao.DB().Where("id = ?", id).Delete(new(T))
 	return result.Error
-	//if result.RowsAffected > 0 {
-	//	return nil
-	//}
-	//if result.Error != nil {
-	//	return result.Error
-	//}
-	//return errors.New("delete record does not exist")
+}
+
+// DeleteCondition
+//
+//	@Description: 自定义条件删除数据
+//	@param condition
+//	@param args
+//	@return error
+func (dao *BaseDao[T]) DeleteCondition(condition string, args ...any) error {
+	result := dao.DB().Where(condition, args...).Delete(new(T))
+	return result.Error
 }
 
 // GetModel

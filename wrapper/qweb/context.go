@@ -119,6 +119,14 @@ func (c *context) GetStruct(key string, objType reflect.Type) any {
 	return obj
 }
 
+func (c *context) GetReturnValue() interface{} {
+	return c.values.OutputValue
+}
+
+func (c *context) SetNewReturnValue(newValue interface{}) {
+	c.values.OutputValue = newValue
+}
+
 func (c *context) loadValues(ginCtx *gin.Context) {
 	// 解析body
 	contentType := ginCtx.Request.Header.Get("Content-Type")
@@ -165,8 +173,8 @@ func (c *context) loadValues(ginCtx *gin.Context) {
 }
 
 type values struct {
-	Inputs []map[string]interface{}
-	//Header map[string]interface{}
+	Inputs      []map[string]interface{}
+	OutputValue interface{}
 }
 
 func (d *values) loadBody(body []byte) error {

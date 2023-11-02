@@ -14,7 +14,8 @@ type QAdapter interface {
 type QBllSvc interface {
 	Init()
 	Bind()
-	Middleware(funcName string, ctx QContext) QFail
+	StartInvoke(funcName string, ctx QContext) QFail
+	EndInvoke(funcName string, ctx QContext)
 	Stop()
 }
 
@@ -32,6 +33,8 @@ type QContext interface {
 	GetDate(key string) Date
 	GetTime(key string) DateTime
 	GetStruct(key string, objType reflect.Type) any
+	GetReturnValue() interface{}
+	SetNewReturnValue(newValue interface{})
 }
 
 type QFail interface {

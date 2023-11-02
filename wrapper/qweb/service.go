@@ -45,8 +45,8 @@ func (gw *ginWeb) Start() {
 
 	// 初始化服务
 	gw.engine = gin.Default()
-	gw.engine.Use(gw.getCors())       // 支持跨域
-	gw.engine.Use(gw.apiMiddleware()) // 加载中间件
+	gw.engine.Use(gw.getCors()) // 支持跨域
+	//gw.engine.Use(gw.apiMiddleware()) // 加载中间件
 	gw.initRoute()
 
 	// 保存配置
@@ -122,47 +122,70 @@ func (gw *ginWeb) initRoute() {
 func (gw *ginWeb) apiRequest(ginCtx *gin.Context) {
 	// 创建上下文
 	ctx := newContextByGin(ginCtx)
+
+	// 前置
+	name := gw.adapter.formatUrlToName(ctx, gw.setting.DefGroup)
+	per := strings.Split(name, "_")[0]
+	if bll, ok := gw.middleware[per]; ok {
+		err := bll.StartInvoke(name, ctx)
+		if err != nil {
+			gw.returnErr(ginCtx, err)
+			return
+		}
+	}
+
 	// 执行方法
 	result, err := gw.adapter.doApi(ctx, gw.setting.DefGroup)
+
 	// 返回
 	if err != nil {
-		if e, ok := err.(qdefine.Error); ok {
-			gw.returnError(ginCtx, e)
-		} else if r, ok := err.(qdefine.Refuse); ok {
-			gw.returnRefuse(ginCtx, r)
-		} else {
-			gw.returnError(ginCtx, qdefine.NewError(500, errors.New("未知的错误类型")))
-		}
+		gw.returnErr(ginCtx, err)
 	} else {
-		gw.returnOk(ginCtx, result)
+		// 后置
+		ctx.SetNewReturnValue(result)
+		if bll, ok := gw.middleware[per]; ok {
+			bll.EndInvoke(name, ctx)
+		}
+		// 返回
+		gw.returnOk(ginCtx, ctx.GetReturnValue())
 	}
 }
 
-func (gw *ginWeb) apiMiddleware() gin.HandlerFunc {
-	return func(ginCtx *gin.Context) {
-		// 创建上下文
-		ctx := newContextByGin(ginCtx)
-		name := gw.adapter.formatUrlToName(ctx, gw.setting.DefGroup)
-		per := strings.Split(name, "_")[0]
-		if bll, ok := gw.middleware[per]; ok {
-			err := bll.Middleware(name, ctx)
-			// 拒绝
-			if err != nil {
-				if e, ok := err.(qdefine.Error); ok {
-					gw.returnError(ginCtx, e)
-				} else if r, ok := err.(qdefine.Refuse); ok {
-					gw.returnRefuse(ginCtx, r)
-				} else {
-					gw.returnError(ginCtx, qdefine.NewError(500, errors.New("未知的错误类型")))
-				}
-				ginCtx.Abort()
-				return
-			}
-		}
-		// 继续
-		ginCtx.Next()
+func (gw *ginWeb) returnErr(ginCtx *gin.Context, err qdefine.QFail) {
+	if e, ok := err.(qdefine.Error); ok {
+		gw.returnError(ginCtx, e)
+	} else if r, ok := err.(qdefine.Refuse); ok {
+		gw.returnRefuse(ginCtx, r)
+	} else {
+		gw.returnError(ginCtx, qdefine.NewError(500, errors.New("未知的错误类型")))
 	}
 }
+
+//func (gw *ginWeb) apiMiddleware() gin.HandlerFunc {
+//	return func(ginCtx *gin.Context) {
+//		// 创建上下文
+//		ctx := newContextByGin(ginCtx)
+//		name := gw.adapter.formatUrlToName(ctx, gw.setting.DefGroup)
+//		per := strings.Split(name, "_")[0]
+//		if bll, ok := gw.middleware[per]; ok {
+//			err := bll.Middleware(name, ctx)
+//			// 拒绝
+//			if err != nil {
+//				if e, ok := err.(qdefine.Error); ok {
+//					gw.returnError(ginCtx, e)
+//				} else if r, ok := err.(qdefine.Refuse); ok {
+//					gw.returnRefuse(ginCtx, r)
+//				} else {
+//					gw.returnError(ginCtx, qdefine.NewError(500, errors.New("未知的错误类型")))
+//				}
+//				ginCtx.Abort()
+//				return
+//			}
+//		}
+//		// 继续
+//		ginCtx.Next()
+//	}
+//}
 
 func (gw *ginWeb) returnOk(ctx *gin.Context, data interface{}) {
 	ctx.JSON(http.StatusOK, gin.H{
