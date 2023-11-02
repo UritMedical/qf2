@@ -22,6 +22,11 @@ type BaseDao[T any] struct {
 	db *gorm.DB
 }
 
+// NewDao
+//
+//	@Description: 创建Dao
+//	@param db
+//	@return *BaseDao[T]
 func NewDao[T any](db *gorm.DB) *BaseDao[T] {
 	// 主动创建数据库
 	err := db.AutoMigrate(new(T))
@@ -238,7 +243,7 @@ func (dao *BaseDao[T]) GetConditions(query interface{}, args ...interface{}) ([]
 	return list, nil
 }
 
-// GetConditions
+// GetConditionsLimit
 //
 //	@Description: 条件查询一组列表
 //	@param maxCount 最大数量
@@ -255,7 +260,7 @@ func (dao *BaseDao[T]) GetConditionsLimit(maxCount int, query interface{}, args 
 			return nil, result.Error
 		}
 	} else {
-		result := dao.DB().Where(query, args).Find(&list)
+		result := dao.DB().Where(query, args...).Find(&list)
 		if result.Error != nil || result.RowsAffected == 0 {
 			return nil, result.Error
 		}

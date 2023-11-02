@@ -8,7 +8,10 @@ require (
 	github.com/fhmq/hmq v1.5.0
 	github.com/gin-gonic/gin v1.9.1
 	github.com/gobeam/stringy v0.0.6
+	github.com/golang-jwt/jwt/v5 v5.0.0
 	github.com/kardianos/service v1.2.2
+	github.com/patrickmn/go-cache v2.1.0+incompatible
+	github.com/pelletier/go-toml/v2 v2.0.8
 	gorm.io/driver/mysql v1.5.2
 	gorm.io/driver/sqlite v1.5.4
 	gorm.io/driver/sqlserver v1.5.2
@@ -32,7 +35,6 @@ require (
 	github.com/go-playground/validator/v10 v10.14.0 // indirect
 	github.com/go-sql-driver/mysql v1.7.0 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
-	github.com/golang-jwt/jwt/v5 v5.0.0 // indirect
 	github.com/golang-sql/civil v0.0.0-20220223132316-b832511892a9 // indirect
 	github.com/golang-sql/sqlexp v0.1.0 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
@@ -58,8 +60,6 @@ require (
 	github.com/microsoft/go-mssqldb v1.6.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
-	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
-	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
 	github.com/pierrec/lz4/v4 v4.1.14 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
