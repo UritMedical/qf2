@@ -157,7 +157,7 @@ func (gw *ginWeb) returnErr(ginCtx *gin.Context, err qdefine.QFail) {
 	} else if r, ok := err.(qdefine.Refuse); ok {
 		gw.returnRefuse(ginCtx, r)
 	} else {
-		gw.returnError(ginCtx, qdefine.NewError(500, errors.New("未知的错误类型")))
+		gw.returnError(ginCtx, qdefine.NewError(qdefine.ErrorCodeOSError, errors.New("未知的错误类型")))
 	}
 }
 
@@ -199,18 +199,17 @@ func (gw *ginWeb) returnError(ctx *gin.Context, err qdefine.Error) {
 	// 记录日志
 	qerror.Write(fmt.Sprintf("\n\t%s %s %d %s %s", ctx.Request.Method, ctx.Request.URL, err.Code(), err.Desc(), err.Error()))
 	ctx.JSON(http.StatusInternalServerError, gin.H{
-		"status":    http.StatusInternalServerError,
-		"msg":       err.Desc(),
-		"exception": err.Error(),
-		"data":      err.Code(),
+		"status":  http.StatusInternalServerError,
+		"msg":     strings.Trim(fmt.Sprintf("%s %s", err.Desc(), err.Error()), " "),
+		"errCode": err.Code(),
 	})
 }
 
 func (gw *ginWeb) returnRefuse(ctx *gin.Context, err qdefine.Refuse) {
 	ctx.JSON(http.StatusBadRequest, gin.H{
-		"status": http.StatusBadRequest,
-		"msg":    err.Desc(),
-		"data":   err.Code(),
+		"status":  http.StatusBadRequest,
+		"msg":     strings.Trim(fmt.Sprintf("%s %s", err.Desc(), err.Error()), " "),
+		"errCode": err.Code(),
 	})
 }
 

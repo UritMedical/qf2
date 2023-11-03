@@ -38,7 +38,7 @@ type QContext interface {
 }
 
 type QFail interface {
-	Code() int
+	Code() string
 	Desc() string
 	Error() string
 }
