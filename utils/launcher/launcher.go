@@ -39,7 +39,7 @@ func Run(start func(), stop func()) {
 	setup(start, nil, nil, stop)
 }
 
-// Run 运行服务
+// RunEx 运行服务
 func RunEx(start func(param interface{}), param interface{}, stop func()) {
 	setup(nil, start, param, stop)
 }

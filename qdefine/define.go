@@ -5,21 +5,24 @@ import (
 )
 
 type QAdapter interface {
-	RegApi(name string, handler QApiHandler)
+	RegGet(router string, handler QApiHandler)
+	RegPost(router string, handler QApiHandler)
+	RegPut(router string, handler QApiHandler)
+	RegDel(router string, handler QApiHandler)
+
 	RegSubscribe(name string, handler QNoticeHandler)
 	SendNotice(topic string, payload interface{})
-	Invoke(funcName string, params map[string]interface{}) (interface{}, QFail)
 }
 
-type QBllSvc interface {
+type QBll interface {
 	Init()
-	Bind()
+	Bind(group string, adapter QAdapter)
 	StartInvoke(funcName string, ctx QContext) QFail
 	EndInvoke(funcName string, ctx QContext)
 	Stop()
 }
 
-type QDaoSvc interface {
+type QDao interface {
 	Init()
 	Stop()
 }

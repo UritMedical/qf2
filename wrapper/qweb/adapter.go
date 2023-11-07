@@ -2,71 +2,91 @@ package qweb
 
 import (
 	"github.com/UritMedical/qf2/qdefine"
-	"sort"
-	"strings"
 )
 
 func newAdapter() *adapter {
 	return &adapter{
-		apiHandlers: map[string]qdefine.QApiHandler{},
+		getApis:  map[string]qdefine.QApiHandler{},
+		postApis: map[string]qdefine.QApiHandler{},
+		putApis:  map[string]qdefine.QApiHandler{},
+		delApis:  map[string]qdefine.QApiHandler{},
 	}
 }
 
 type adapter struct {
-	apiHandlers    map[string]qdefine.QApiHandler
-	tmpLastApiName string
+	getApis  map[string]qdefine.QApiHandler
+	postApis map[string]qdefine.QApiHandler
+	putApis  map[string]qdefine.QApiHandler
+	delApis  map[string]qdefine.QApiHandler
 }
 
-// RegApi
-//
-//	@Description: 支持API方法
-//	@param name 方法名称
-//	@param handler 方法指针
-func (a *adapter) RegApi(name string, handler qdefine.QApiHandler) {
-	name = strings.ToLower(name)
-	// 去掉root
-	if strings.HasPrefix(name, "root_") {
-		name = strings.Replace(name, "root_", "", 1)
-	}
-	a.apiHandlers[name] = handler
-	a.tmpLastApiName = name
+func (a *adapter) RegGet(router string, handler qdefine.QApiHandler) {
+	a.getApis[router] = handler
 }
 
-func (a *adapter) getRoutes() []route {
-	routes := make([]route, 0)
-	for k, _ := range a.apiHandlers {
-		sp := strings.Split(k, "_")
-		// 生成地址
-		url := ""
-		for i := 0; i < len(sp)-1; i++ {
-			url += "/" + strings.ToLower(sp[i])
+func (a *adapter) RegPost(router string, handler qdefine.QApiHandler) {
+	a.postApis[router] = handler
+}
+
+func (a *adapter) RegPut(router string, handler qdefine.QApiHandler) {
+	a.putApis[router] = handler
+}
+
+func (a *adapter) RegDel(router string, handler qdefine.QApiHandler) {
+	a.delApis[router] = handler
+}
+
+func (a *adapter) Invoke(route, method string, params map[string]interface{}) (interface{}, qdefine.QFail) {
+	ctx := newContextByRef(route, method, params)
+	switch method {
+	case "Get":
+		if handler, ok := a.getApis[route]; ok {
+			return handler(ctx)
 		}
-		url = strings.Trim(url, "/")
-		// 添加到字典
-		routes = append(routes, route{url, strings.ToLower(sp[len(sp)-1])})
-	}
-	// 排序
-	sort.Slice(routes, func(i, j int) bool {
-		return routes[i].Url > routes[j].Url
-	})
-	return routes
-}
-
-func (a *adapter) formatUrlToName(ctx *context, defGroup string) string {
-	url := ctx.url
-	url = strings.Replace(url, defGroup, "", 1)
-	url = strings.Trim(url, "/")
-	url = strings.Replace(url, "/", "_", -1)
-	name := url + "_" + strings.ToLower(ctx.method)
-	return name
-}
-
-func (a *adapter) doApi(ctx *context, defGroup string) (interface{}, qdefine.QFail) {
-	name := a.formatUrlToName(ctx, defGroup)
-	if handler, ok := a.apiHandlers[name]; ok {
-		return handler(ctx)
+	case "Put":
+		if handler, ok := a.putApis[route]; ok {
+			return handler(ctx)
+		}
+	case "Post":
+		if handler, ok := a.postApis[route]; ok {
+			return handler(ctx)
+		}
+	case "Del":
+		if handler, ok := a.delApis[route]; ok {
+			return handler(ctx)
+		}
 	}
 	return nil, nil
+}
+
+func (a *adapter) doApi(ctx *context) (interface{}, qdefine.QFail) {
+	route := ctx.route
+	method := ctx.method
+	var handler qdefine.QApiHandler = nil
+	switch method {
+	case "POST":
+		if h, ok := a.postApis[route]; ok {
+			handler = h
+		}
+	case "DELETE":
+		if h, ok := a.delApis[route]; ok {
+			handler = h
+		}
+	case "PUT":
+		if h, ok := a.putApis[route]; ok {
+			handler = h
+		}
+	case "GET":
+		if h, ok := a.getApis[route]; ok {
+			handler = h
+		}
+	}
+	if handler != nil {
+		return handler(ctx)
+	} else {
+		return nil, nil
+	}
+
 }
 
 func (a *adapter) RegSubscribe(name string, handler qdefine.QNoticeHandler) {
@@ -75,12 +95,4 @@ func (a *adapter) RegSubscribe(name string, handler qdefine.QNoticeHandler) {
 
 func (a *adapter) SendNotice(topic string, payload interface{}) {
 
-}
-
-func (a *adapter) Invoke(funcName string, params map[string]interface{}) (interface{}, qdefine.QFail) {
-	ctx := newContextByRef(funcName, params)
-	if handler, ok := a.apiHandlers[funcName]; ok {
-		return handler(ctx)
-	}
-	return nil, nil
 }

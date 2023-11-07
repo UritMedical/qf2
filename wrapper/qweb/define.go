@@ -8,16 +8,16 @@ import (
 )
 
 type StartParam struct {
-	ConfigPath     string
-	Stop           func()
-	Svcs           []ModeuleSvc
-	ReferencesInit func(adapter qdefine.QAdapter)
+	ConfigSection string
+	Stop          func()
+	Modules       map[string]Module
 }
 
-type ModeuleSvc struct {
-	QfSvc  func(adapter qdefine.QAdapter)
-	BllSvc qdefine.QBllSvc
-	DaoSvc qdefine.QDaoSvc
+type Module struct {
+	//RouteGroup string
+	//QAdapter func(adapter qdefine.QAdapter)
+	QBll qdefine.QBll
+	QDao qdefine.QDao
 }
 
 type setting struct {
@@ -29,10 +29,10 @@ type setting struct {
 	OtherConfig otherConfig `comment:"其他配置"`
 }
 
-type callConfig struct {
-	MqClient string
-	ApiUrls  map[string]string
-}
+//type callConfig struct {
+//	MqClient string
+//	ApiUrls  map[string]string
+//}
 
 type otherConfig struct {
 	JsonDateFormat string `comment:"框架日期的Json格式"`
@@ -58,7 +58,7 @@ func (s *setting) Save() {
 	_ = qconfig.SaveFromToml(s.configPath, s)
 }
 
-type route struct {
-	Url  string
-	Type string
-}
+//type route struct {
+//	Url  string
+//	Type string
+//}

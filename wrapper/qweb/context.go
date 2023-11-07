@@ -14,21 +14,16 @@ import (
 )
 
 type context struct {
-	url    string
+	route  string
 	method string
 	values *values
 }
 
-func newContextByRef(funcName string, params map[string]interface{}) *context {
-	sp := strings.Split(funcName, "_")
-	url := ""
-	for i := 0; i < len(sp)-1; i++ {
-		url += strings.ToLower(sp[i]) + "_"
-	}
-	url = strings.Trim(url, "_")
+func newContextByRef(route, method string, params map[string]interface{}) *context {
+
 	ctx := &context{
-		url:    url,
-		method: sp[len(sp)-1],
+		route:  route,
+		method: method,
 		values: &values{
 			Inputs: make([]map[string]interface{}, 0),
 		},
@@ -43,7 +38,7 @@ func newContextByRef(funcName string, params map[string]interface{}) *context {
 
 func newContextByGin(ginCtx *gin.Context) *context {
 	ctx := &context{
-		url:    ginCtx.Request.URL.Path,
+		route:  ginCtx.Request.URL.Path,
 		method: ginCtx.Request.Method,
 		values: &values{
 			Inputs: make([]map[string]interface{}, 0),
