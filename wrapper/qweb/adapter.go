@@ -1,6 +1,8 @@
 package qweb
 
 import (
+	"errors"
+	"fmt"
 	"github.com/UritMedical/qf2/qdefine"
 )
 
@@ -84,9 +86,8 @@ func (a *adapter) doApi(ctx *context) (interface{}, qdefine.QFail) {
 	if handler != nil {
 		return handler(ctx)
 	} else {
-		return nil, nil
+		return nil, qdefine.NewError(qdefine.ErrorCodeOSError, errors.New(fmt.Sprintf("unknown api %s", method)))
 	}
-
 }
 
 func (a *adapter) RegSubscribe(name string, handler qdefine.QNoticeHandler) {

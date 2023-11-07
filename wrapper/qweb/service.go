@@ -109,7 +109,6 @@ func (gw *ginWeb) initPlugin() {
 }
 
 func (gw *ginWeb) initRoute() {
-
 	for k := range gw.adapter.getApis {
 		gw.engine.GET(gw.setting.DefGroup+"/"+k, gw.apiRequest)
 	}
@@ -127,9 +126,11 @@ func (gw *ginWeb) initRoute() {
 func (gw *ginWeb) apiRequest(ginCtx *gin.Context) {
 	// 创建上下文
 	ctx := newContextByGin(ginCtx)
-	// 前置
-	ctx.route = strings.Replace(ctx.route, gw.setting.DefGroup, "", 1)
 
+	ctx.route = strings.Replace(ctx.route, gw.setting.DefGroup, "", 1)
+	ctx.route = strings.Trim(ctx.route, "/")
+
+	// 前置
 	head := strings.Split(ctx.route, "/")[0]
 	if bll, ok := gw.middleware[head]; ok {
 		err := bll.StartInvoke(ctx.route, ctx)
