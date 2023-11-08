@@ -1,7 +1,6 @@
 package qweb
 
 import (
-	"errors"
 	"fmt"
 	"github.com/UritMedical/qf2/qdefine"
 	"github.com/UritMedical/qf2/utils/launcher"
@@ -17,25 +16,25 @@ const SettingPath string = "./config/setting.yaml"
 // Run
 //
 //	@Description: 启动
-//	@param startParam
-func Run(startParam StartParam) {
+//	@param Widget
+func Run(startParam qdefine.QWidget) {
 	ginWeb := &ginWeb{
-		startParam: startParam,
+		Widget: startParam,
 	}
 	launcher.Run(ginWeb.Start, ginWeb.Stop)
 }
 
 type ginWeb struct {
 	///启动参数
-	startParam StartParam
+	Widget qdefine.QWidget
 	//gin引擎
 	engine *gin.Engine
 	//设置
 	setting *setting
 	//qf访问器
 	adapter *adapter
-	//中间件
-	middleware map[string]qdefine.QBll
+	////中间件
+	//middleware map[string]qdefine.QBll
 }
 
 func (gw *ginWeb) Start() {
@@ -47,8 +46,8 @@ func (gw *ginWeb) Start() {
 	// 加载配置
 	gw.setting = newSetting(SettingPath)
 
-	// 初始化插件
-	gw.initPlugin()
+	// 初始化微件
+	gw.initWidget()
 
 	// 初始化服务
 	gw.engine = gin.Default()
@@ -69,42 +68,30 @@ func (gw *ginWeb) Start() {
 }
 
 func (gw *ginWeb) Stop() {
-	for _, m := range gw.startParam.Modules {
-		m.QDao.Stop()
-		m.QBll.Stop()
+	for _, m := range gw.Widget.Modules {
+		m.OnStop()
 	}
 }
 
-func (gw *ginWeb) initPlugin() {
+func (gw *ginWeb) initWidget() {
 	// 创建访问器
 	gw.adapter = newAdapter()
 
 	// 初始化Dao
 	qdb.ConfigPath = SettingPath
-	for _, m := range gw.startParam.Modules {
-		m.QDao.Init()
-	}
+
 	gw.setting.GormConfig = qdb.Settings
 
-	// 初始化业务
-	gw.middleware = make(map[string]qdefine.QBll)
-	for k, m := range gw.startParam.Modules {
-		m.QBll.Init()
-		//m.QAdapter(gw.adapter)
+	//// 初始化业务
+	//gw.middleware = make(map[string]qdefine.QBll)
 
-		// 提取该模块注册的服务前缀，生成每个模块的中间件字段
-		// 用于根据url调用对应模块的中间件
-		//pkg := strings.Split(gw.adapter.tmpLastApiName, "_")[0]
-
-		gw.middleware[k] = m.QBll
-	}
-	//if gw.startParam.ReferencesInit != nil {
-	//	gw.startParam.ReferencesInit(gw.adapter)
+	//if gw.Widget.ReferencesInit != nil {
+	//	gw.Widget.ReferencesInit(gw.adapter)
 	//}
 
 	// 绑定业务方法
-	for k, m := range gw.startParam.Modules {
-		m.QBll.Bind(k+"/", gw.adapter)
+	for k, m := range gw.Widget.Modules {
+		m.Reg(k+"/", gw.adapter)
 	}
 }
 
@@ -132,38 +119,36 @@ func (gw *ginWeb) apiRequest(ginCtx *gin.Context) {
 
 	// 前置
 	head := strings.Split(ctx.route, "/")[0]
-	if bll, ok := gw.middleware[head]; ok {
-		err := bll.StartInvoke(ctx.route, ctx)
-		if err != nil {
-			gw.returnErr(ginCtx, err)
+	if module, ok := gw.Widget.Modules[head]; ok {
+		fail := module.OnStartInvoke(ctx.route, ctx)
+		if fail != nil {
+			gw.returnErr(ginCtx, fail)
 			return
 		}
 	}
 
 	// 执行方法
-	result, err := gw.adapter.doApi(ctx)
+	result, fail := gw.adapter.doApi(ctx)
 
 	// 返回
-	if err != nil {
-		gw.returnErr(ginCtx, err)
+	if fail != nil {
+		gw.returnErr(ginCtx, fail)
 	} else {
 		// 后置
 		ctx.SetNewReturnValue(result)
-		if bll, ok := gw.middleware[head]; ok {
-			bll.EndInvoke(ctx.route, ctx)
+		if module, ok := gw.Widget.Modules[head]; ok {
+			module.OnEndInvoke(ctx.route, ctx)
 		}
 		// 返回
 		gw.returnOk(ginCtx, ctx.GetReturnValue())
 	}
 }
 
-func (gw *ginWeb) returnErr(ginCtx *gin.Context, err qdefine.QFail) {
-	if e, ok := err.(qdefine.Error); ok {
-		gw.returnError(ginCtx, e)
-	} else if r, ok := err.(qdefine.Refuse); ok {
-		gw.returnRefuse(ginCtx, r)
+func (gw *ginWeb) returnErr(ginCtx *gin.Context, fail *qdefine.QFail) {
+	if fail.Err != nil {
+		gw.returnError(ginCtx, fail.Err)
 	} else {
-		gw.returnError(ginCtx, qdefine.NewError(qdefine.ErrorCodeOSError, errors.New("未知的错误类型")))
+		gw.returnRefuse(ginCtx, fail.Code, fail.Desc)
 	}
 }
 
@@ -175,21 +160,20 @@ func (gw *ginWeb) returnOk(ctx *gin.Context, data interface{}) {
 	})
 }
 
-func (gw *ginWeb) returnError(ctx *gin.Context, err qdefine.Error) {
+func (gw *ginWeb) returnError(ctx *gin.Context, err error) {
 	// 记录日志
-	qerror.Write(fmt.Sprintf("\n\t%s %s %s %s %s", ctx.Request.Method, ctx.Request.URL, err.Code(), err.Desc(), err.Error()))
+	qerror.Write(fmt.Sprintf("\n\t%s %s %s", ctx.Request.Method, ctx.Request.URL, err.Error()))
 	ctx.JSON(http.StatusInternalServerError, gin.H{
-		"status":  http.StatusInternalServerError,
-		"msg":     strings.Trim(fmt.Sprintf("%s %s", err.Desc(), err.Error()), " "),
-		"errCode": err.Code(),
+		"status": http.StatusInternalServerError,
+		"msg":    strings.Trim(err.Error(), " "),
 	})
 }
 
-func (gw *ginWeb) returnRefuse(ctx *gin.Context, err qdefine.Refuse) {
+func (gw *ginWeb) returnRefuse(ctx *gin.Context, code int, desc string) {
 	ctx.JSON(http.StatusBadRequest, gin.H{
-		"status":  http.StatusBadRequest,
-		"msg":     strings.Trim(fmt.Sprintf("%s %s", err.Desc(), err.Error()), " "),
-		"errCode": err.Code(),
+		"status": http.StatusBadRequest,
+		"msg":    strings.Trim(desc, " "),
+		"code":   code,
 	})
 }
 

@@ -4,6 +4,18 @@ import (
 	"reflect"
 )
 
+// QWidget 微件
+type QWidget struct {
+	ConfigSection string
+	Modules       map[string]QModule
+}
+type QModule interface {
+	OnStop()
+	Reg(routeGroup string, adapter QAdapter)
+	OnStartInvoke(funcName string, ctx QContext) *QFail
+	OnEndInvoke(funcName string, ctx QContext)
+}
+
 type QAdapter interface {
 	RegGet(router string, handler QApiHandler)
 	RegPost(router string, handler QApiHandler)
@@ -40,13 +52,13 @@ type QContext interface {
 	SetNewReturnValue(newValue interface{})
 }
 
-type QFail interface {
-	Code() string
-	Desc() string
-	Error() string
+type QFail struct {
+	Code int
+	Err  error
+	Desc string
 }
 
-type QApiHandler func(ctx QContext) (interface{}, QFail)
+type QApiHandler func(ctx QContext) (interface{}, *QFail)
 
 type QNoticeHandler func(ctx QContext)
 

@@ -7,12 +7,6 @@ import (
 	"github.com/UritMedical/qf2/utils/qio"
 )
 
-type StartParam struct {
-	ConfigSection string
-	Stop          func()
-	Modules       map[string]Module
-}
-
 type Module struct {
 	//RouteGroup string
 	//QAdapter func(adapter qdefine.QAdapter)
