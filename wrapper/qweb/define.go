@@ -21,6 +21,7 @@ type setting struct {
 	GormConfig map[string]qdb.Setting `comment:"gorm配置"`
 	//CallConfig  callConfig             `comment:"插件间api访问地址，如果是通过启动器统一启动，则无需配置"`
 	OtherConfig otherConfig `comment:"其他配置"`
+	StartDelay  int         `comment:"启动延迟 秒"`
 }
 
 //type callConfig struct {
@@ -35,8 +36,9 @@ type otherConfig struct {
 
 func newSetting(configPath string) *setting {
 	s := &setting{
-		Port:     10001,
-		DefGroup: "api",
+		Port:       10001,
+		DefGroup:   "api",
+		StartDelay: 5,
 	}
 	s.OtherConfig = otherConfig{
 		JsonDateFormat: "yyyy-MM-dd",

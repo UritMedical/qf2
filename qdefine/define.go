@@ -22,7 +22,6 @@ type QAdapter interface {
 	RegPut(router string, handler QApiHandler)
 	RegDel(router string, handler QApiHandler)
 
-	RegSubscribe(name string, handler QNoticeHandler)
 	SendNotice(topic string, payload interface{})
 }
 

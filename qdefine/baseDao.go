@@ -185,8 +185,8 @@ func (dao *BaseDao[T]) CheckExist(id uint64) bool {
 //	@param maxCount 最大数量
 //	@return []*T
 //	@return error
-func (dao *BaseDao[T]) GetList(startId uint64, maxCount int) ([]*T, error) {
-	list := make([]*T, 0)
+func (dao *BaseDao[T]) GetList(startId uint64, maxCount int) ([]T, error) {
+	list := make([]T, 0)
 	// 查询
 	result := dao.DB().Limit(int(maxCount)).Offset(int(startId)).Find(&list)
 	if result.Error != nil || result.RowsAffected == 0 {
@@ -200,8 +200,8 @@ func (dao *BaseDao[T]) GetList(startId uint64, maxCount int) ([]*T, error) {
 //	@Description: 返回所有列表
 //	@return []*T
 //	@return error
-func (dao *BaseDao[T]) GetAll() ([]*T, error) {
-	list := make([]*T, 0)
+func (dao *BaseDao[T]) GetAll() ([]T, error) {
+	list := make([]T, 0)
 	// 查询
 	result := dao.DB().Find(&list)
 	if result.Error != nil || result.RowsAffected == 0 {
@@ -234,8 +234,8 @@ func (dao *BaseDao[T]) GetCondition(query interface{}, args ...interface{}) (*T,
 //	@param args 条件参数，如 id, ids 等
 //	@return []*T
 //	@return error
-func (dao *BaseDao[T]) GetConditions(query interface{}, args ...interface{}) ([]*T, error) {
-	list := make([]*T, 0)
+func (dao *BaseDao[T]) GetConditions(query interface{}, args ...interface{}) ([]T, error) {
+	list := make([]T, 0)
 	// 查询
 	result := dao.DB().Where(query, args...).Find(&list)
 	if result.Error != nil || result.RowsAffected == 0 {

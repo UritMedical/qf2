@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strings"
+	"time"
 )
 
 const SettingPath string = "./config/setting.yaml"
@@ -17,16 +18,18 @@ const SettingPath string = "./config/setting.yaml"
 //
 //	@Description: 启动
 //	@param Widget
-func Run(startParam qdefine.QWidget) {
+func Run(f func(), widget qdefine.QWidget) {
 	ginWeb := &ginWeb{
-		Widget: startParam,
+		Widget:   widget,
+		initFunc: f,
 	}
 	launcher.Run(ginWeb.Start, ginWeb.Stop)
 }
 
 type ginWeb struct {
 	///启动参数
-	Widget qdefine.QWidget
+	Widget   qdefine.QWidget
+	initFunc func()
 	//gin引擎
 	engine *gin.Engine
 	//设置
@@ -45,7 +48,9 @@ func (gw *ginWeb) Start() {
 
 	// 加载配置
 	gw.setting = newSetting(SettingPath)
+	time.Sleep(time.Second * time.Duration(gw.setting.StartDelay))
 
+	gw.initFunc()
 	// 初始化微件
 	gw.initWidget()
 

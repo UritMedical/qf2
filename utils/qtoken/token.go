@@ -14,7 +14,7 @@ const (
 
 type Content struct {
 	Id      uint64                 `json:"i"`
-	Roles   []int                  `json:"r"`
+	Roles   []string               `json:"r"`
 	Customs map[string]interface{} `json:"c"`
 }
 

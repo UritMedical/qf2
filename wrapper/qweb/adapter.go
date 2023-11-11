@@ -90,10 +90,6 @@ func (a *adapter) doApi(ctx *context) (interface{}, *qdefine.QFail) {
 	}
 }
 
-func (a *adapter) RegSubscribe(name string, handler qdefine.QNoticeHandler) {
-
-}
-
 func (a *adapter) SendNotice(topic string, payload interface{}) {
-
+	a.SendNotice(topic, payload)
 }

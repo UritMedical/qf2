@@ -37,6 +37,12 @@ func (d *Date) FromTime(time time.Time) {
 	v, _ := strconv.ParseUint(s, 10, 32)
 	*d = Date(v)
 }
+func FromTime(time time.Time) (d Date) {
+	t := time.Local()
+	s := fmt.Sprintf("%04d%02d%02d", t.Year(), t.Month(), t.Day())
+	v, _ := strconv.ParseUint(s, 10, 32)
+	return Date(v)
+}
 
 // ToString
 //
