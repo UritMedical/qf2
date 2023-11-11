@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/UritMedical/qf2/qdefine"
+	"reflect"
 )
 
 func newAdapter() *adapter {
@@ -84,6 +85,9 @@ func (a *adapter) doApi(ctx *context) (interface{}, *qdefine.QFail) {
 		}
 	}
 	if handler != nil {
+		r := reflect.ValueOf(handler)
+		b := r.Interface()
+		fmt.Println(b)
 		return handler(ctx)
 	} else {
 		return nil, &qdefine.QFail{Err: errors.New(fmt.Sprintf("unknown api %s", method)), Desc: "unknown api"}
