@@ -4,15 +4,13 @@ import (
 	"fmt"
 	"github.com/UritMedical/qf2/qdefine"
 	"github.com/UritMedical/qf2/utils/launcher"
-	"github.com/UritMedical/qf2/utils/qdb"
+	"github.com/UritMedical/qf2/utils/qconfig"
 	"github.com/UritMedical/qf2/utils/qerror"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strings"
 	"time"
 )
-
-const SettingPath string = "./config/setting.yaml"
 
 // Run
 //
@@ -27,17 +25,11 @@ func Run(f func(), widget qdefine.QWidget) {
 }
 
 type ginWeb struct {
-	///启动参数
-	Widget   qdefine.QWidget
-	initFunc func()
-	//gin引擎
-	engine *gin.Engine
-	//设置
-	setting *setting
-	//qf访问器
-	adapter *adapter
-	////中间件
-	//middleware map[string]qdefine.QBll
+	Widget   qdefine.QWidget //启动参数
+	initFunc func()          //初始化方法
+	engine   *gin.Engine     //gin引擎
+	adapter  *adapter        //qf访问器
+	setting  setting         //设置
 }
 
 func (gw *ginWeb) Start() {
@@ -47,7 +39,9 @@ func (gw *ginWeb) Start() {
 	})
 
 	// 加载配置
-	gw.setting = newSetting(SettingPath)
+	gw.setting = qconfig.Get("Base", defaultSetting())
+
+	// 延迟启动
 	time.Sleep(time.Second * time.Duration(gw.setting.StartDelay))
 
 	gw.initFunc()
@@ -57,11 +51,10 @@ func (gw *ginWeb) Start() {
 	// 初始化服务
 	gw.engine = gin.Default()
 	gw.engine.Use(gw.getCors()) // 支持跨域
-	//gw.engine.Use(gw.apiMiddleware()) // 加载中间件
 	gw.initRoute()
 
 	// 保存配置
-	gw.setting.Save()
+	_ = qconfig.Save()
 
 	// 启动服务
 	go func() {
@@ -81,18 +74,6 @@ func (gw *ginWeb) Stop() {
 func (gw *ginWeb) initWidget() {
 	// 创建访问器
 	gw.adapter = newAdapter()
-
-	// 初始化Dao
-	qdb.ConfigPath = SettingPath
-
-	gw.setting.GormConfig = qdb.Settings
-
-	//// 初始化业务
-	//gw.middleware = make(map[string]qdefine.QBll)
-
-	//if gw.Widget.ReferencesInit != nil {
-	//	gw.Widget.ReferencesInit(gw.adapter)
-	//}
 
 	// 绑定业务方法
 	for k, m := range gw.Widget.Modules {

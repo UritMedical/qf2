@@ -21,7 +21,13 @@ func Get[T any](key string, defValue T) T {
 	viper.SetDefault(key, defValue)
 
 	// 获取配置
-	if qio.PathExists("./config/config.yaml") {
+	full := qio.GetFullPath("./config/config.yaml")
+	if qio.PathExists(full) {
+		// 读取配置文件
+		err := viper.ReadInConfig()
+		if err != nil {
+			return *new(T)
+		}
 		// 通过json转换到t
 		obj := viper.Get(key)
 		js, err := json.Marshal(obj)
@@ -51,5 +57,9 @@ func Set(key string, value any) {
 //	@Description: 保存文件
 //	@return error
 func Save() error {
-	return viper.WriteConfig()
+	if qio.PathExists("./config/config.yaml") == false {
+		qio.CreateFile("./config/config.yaml")
+	}
+	err := viper.WriteConfig()
+	return err
 }

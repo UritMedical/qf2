@@ -134,6 +134,32 @@ func CreateDirectory(path string) (string, error) {
 	return path, nil
 }
 
+// CreateFile
+//
+//	@Description: 创建空文件
+//	@param path
+//	@return error
+func CreateFile(path string) error {
+	fullPath := GetFullPath(path)
+	// 判断文件夹是否操作
+	dir := GetDirectory(path)
+	if PathExists(dir) == false {
+		_, err := CreateDirectory(dir)
+		if err != nil {
+			return err
+		}
+	}
+	// 生成文件
+	file, err := os.Create(fullPath)
+	defer func(file *os.File) {
+		err := file.Close()
+		if err != nil {
+
+		}
+	}(file)
+	return err
+}
+
 // DeleteFile
 //
 //	@Description: 删除文件

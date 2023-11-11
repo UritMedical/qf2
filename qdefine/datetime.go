@@ -2,6 +2,7 @@ package qdefine
 
 import (
 	"fmt"
+	"github.com/UritMedical/qf2/utils/qconfig"
 	"github.com/UritMedical/qf2/utils/qdate"
 	"strconv"
 	"strings"
@@ -9,19 +10,9 @@ import (
 )
 
 var (
-	dateFormat     = "yyyy-MM-dd"          // 日期掩码
-	dateTimeFormat = "yyyy-MM-dd HH:mm:ss" // 日期时间掩码
+	dateFormat     = "" // 日期掩码
+	dateTimeFormat = "" // 日期时间掩码
 )
-
-// ChangeDateFormat
-//
-//	@Description: 修改系统全局时间格式
-//	@param datef
-//	@param timef
-func ChangeDateFormat(dtFormat, timeFormat string) {
-	dateFormat = dtFormat
-	dateTimeFormat = fmt.Sprintf("%s %s", dtFormat, timeFormat)
-}
 
 type Date uint32
 
@@ -51,6 +42,9 @@ func FromTime(time time.Time) (d Date) {
 //
 //goland:noinspection GoMixedReceiverTypes
 func (d Date) ToString() string {
+	if dateFormat == "" {
+		dateFormat = qconfig.Get("Base.DateMask", "yyyy-MM-dd")
+	}
 	return qdate.ToString(d.ToTime(), dateFormat)
 }
 
@@ -196,6 +190,9 @@ func (d DateTime) Date() Date {
 //
 //goland:noinspection GoMixedReceiverTypes
 func (d DateTime) ToString() string {
+	if dateTimeFormat == "" {
+		dateTimeFormat = qconfig.Get("Base.DateTimeMask", "yyyy-MM-dd HH:mm:ss")
+	}
 	return qdate.ToString(d.ToTime(), dateTimeFormat)
 }
 
@@ -242,6 +239,9 @@ func (d DateTime) MarshalJSON() ([]byte, error) {
 //
 //goland:noinspection GoMixedReceiverTypes
 func (d *DateTime) UnmarshalJSON(data []byte) error {
+	if dateTimeFormat == "" {
+		dateTimeFormat = qconfig.Get("Base.DateTimeMask", "yyyy-MM-dd HH:mm:ss")
+	}
 	v, err := qdate.ToNumber(string(data), dateTimeFormat)
 	if err == nil {
 		*d = DateTime(v)

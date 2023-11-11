@@ -7,6 +7,11 @@ import (
 	"strings"
 )
 
+// Marshal
+//
+//	@Description: 将Api的Model序列化为数据库的Model
+//	@param apiTypesStruct ApiModel
+//	@return T DbModel
 func Marshal[T any](apiTypesStruct any) T {
 	// 先将apiModel转为字典
 	js, _ := json.Marshal(apiTypesStruct)
@@ -18,6 +23,11 @@ func Marshal[T any](apiTypesStruct any) T {
 	return *dbModel
 }
 
+// UnMarshal
+//
+//	@Description: 将数据库的Model反序列化到Api的Model
+//	@param dbModel DbModel
+//	@return T ApiModel
 func UnMarshal[T any](dbModel any) T {
 	apiModel := new(T)
 	api := qreflect.New(apiModel)

@@ -3,7 +3,6 @@ package qdb
 import (
 	"errors"
 	"fmt"
-	"github.com/UritMedical/qf2/utils/qconfig"
 	"github.com/UritMedical/qf2/utils/qio"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/sqlite"
@@ -14,26 +13,12 @@ import (
 	"strings"
 )
 
-var (
-	ConfigPath = "./config/config.toml"
-	Settings   map[string]Setting
-)
-
-type Setting struct {
-	OpenLog            byte `comment:"开关 0否 1是"`
-	SkipDefTransaction byte
-	DBConfig           string `comment:"数据库类型|参数\n sqlite|./db/data.db&OFF\n sqlserver|用户名:密码@地址?database=数据库&encrypt=disable\n mysql|用户名:密码@tcp(127.0.0.1:3306)/数据库?charset=utf8mb4&parseTime=True&loc=Local"`
-}
-
 // NewDb
 //
 //	@Description: 创建数据库
 //	@param cfgSection 配置节点，用于启动多个数据库不用配置
 //	@return *gorm.DB
 func NewDb(cfgSection string) *gorm.DB {
-	if Settings == nil {
-		Settings = map[string]Setting{}
-	}
 	setting := loadSetting(cfgSection)
 	gc := gorm.Config{
 		NamingStrategy: schema.NamingStrategy{
@@ -86,29 +71,4 @@ func NewDb(cfgSection string) *gorm.DB {
 		panic(errors.New("unknown db type"))
 	}
 	return db
-}
-
-func loadSetting(cfgSection string) Setting {
-	// 加载配置
-	old := struct {
-		GormConfig map[string]Setting
-	}{
-		GormConfig: map[string]Setting{},
-	}
-	_ = qconfig.OnlyLoadFromToml(qio.GetFullPath(ConfigPath), &old)
-	for k, v := range old.GormConfig {
-		Settings[k] = v
-	}
-	if _, ok := Settings[cfgSection]; ok == false {
-		dbName := cfgSection
-		if dbName == "" {
-			dbName = "data"
-		}
-		Settings[cfgSection] = Setting{
-			OpenLog:            0,
-			SkipDefTransaction: 1,
-			DBConfig:           fmt.Sprintf("sqlite|./db/%s.db&OFF", dbName),
-		}
-	}
-	return Settings[cfgSection]
 }
