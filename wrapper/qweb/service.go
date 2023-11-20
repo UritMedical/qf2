@@ -83,15 +83,19 @@ func (gw *ginWeb) initWidget() {
 
 func (gw *ginWeb) initRoute() {
 	for k := range gw.adapter.getApis {
+
 		gw.engine.GET(gw.setting.DefGroup+"/"+k, gw.apiRequest)
 	}
 	for k := range gw.adapter.postApis {
+
 		gw.engine.POST(gw.setting.DefGroup+"/"+k, gw.apiRequest)
 	}
 	for k := range gw.adapter.putApis {
+
 		gw.engine.PUT(gw.setting.DefGroup+"/"+k, gw.apiRequest)
 	}
 	for k := range gw.adapter.delApis {
+
 		gw.engine.DELETE(gw.setting.DefGroup+"/"+k, gw.apiRequest)
 	}
 }

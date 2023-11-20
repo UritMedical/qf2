@@ -13,8 +13,8 @@ const (
 )
 
 type Content struct {
-	Id      uint64                 `json:"i"`
-	Roles   []string               `json:"r"`
+	Id uint64 `json:"i"`
+	//Roles   string                 `json:"r"`
 	Customs map[string]interface{} `json:"c"`
 }
 
@@ -31,9 +31,9 @@ func GenerateToken(content Content, ttl int64) (string, error) {
 
 	now := time.Now()
 	claims["i"] = content.Id
-	if content.Roles != nil {
-		claims["r"] = content.Roles
-	}
+	//if content.Roles != nil {
+	//	claims["r"] = content.Roles
+	//}
 	claims["e"] = jwt.NewNumericDate(now.Add(time.Duration(ttl) * time.Hour))
 	if content.Customs != nil {
 		js, _ := json.Marshal(content.Customs)

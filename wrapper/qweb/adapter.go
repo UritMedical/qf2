@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/UritMedical/qf2/qdefine"
 	"reflect"
+	"strings"
 )
 
 func newAdapter() *adapter {
@@ -24,37 +25,38 @@ type adapter struct {
 }
 
 func (a *adapter) RegGet(router string, handler qdefine.QApiHandler) {
-	a.getApis[router] = handler
+
+	a.getApis[strings.Trim(router, "/")] = handler
 }
 
 func (a *adapter) RegPost(router string, handler qdefine.QApiHandler) {
-	a.postApis[router] = handler
+	a.postApis[strings.Trim(router, "/")] = handler
 }
 
 func (a *adapter) RegPut(router string, handler qdefine.QApiHandler) {
-	a.putApis[router] = handler
+	a.putApis[strings.Trim(router, "/")] = handler
 }
 
 func (a *adapter) RegDel(router string, handler qdefine.QApiHandler) {
-	a.delApis[router] = handler
+	a.delApis[strings.Trim(router, "/")] = handler
 }
 
 func (a *adapter) Invoke(route, method string, params map[string]interface{}) (interface{}, *qdefine.QFail) {
 	ctx := newContextByRef(route, method, params)
 	switch method {
-	case "Get":
+	case "GetModel":
 		if handler, ok := a.getApis[route]; ok {
 			return handler(ctx)
 		}
-	case "Put":
+	case "Update":
 		if handler, ok := a.putApis[route]; ok {
 			return handler(ctx)
 		}
-	case "Post":
+	case "Create":
 		if handler, ok := a.postApis[route]; ok {
 			return handler(ctx)
 		}
-	case "Del":
+	case "Delete":
 		if handler, ok := a.delApis[route]; ok {
 			return handler(ctx)
 		}
