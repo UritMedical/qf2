@@ -1,4 +1,4 @@
-package main
+package qtoken
 
 import (
 	"encoding/json"
