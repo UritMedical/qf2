@@ -1,4 +1,4 @@
-package qtoken
+package main
 
 import (
 	"encoding/json"
@@ -36,8 +36,9 @@ func GenerateToken(content Content, ttl int64) (string, error) {
 	//}
 	claims["e"] = jwt.NewNumericDate(now.Add(time.Duration(ttl) * time.Hour))
 	if content.Customs != nil {
-		js, _ := json.Marshal(content.Customs)
-		claims["c"] = string(js)
+		//js, _ := json.Marshal(content.Customs)
+		//claims["c"] = string(js)
+		claims["c"] = content.Customs
 	}
 
 	// 使用HS256算法创建一个新的令牌
