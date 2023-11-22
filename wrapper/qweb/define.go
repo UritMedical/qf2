@@ -10,15 +10,22 @@ type Module struct {
 }
 
 type setting struct {
-	Port       int
-	DefGroup   string
-	StartDelay int
+	Port        int
+	StartDelay  int
+	DefGroup    string
+	StaticDir   string
+	HistoryMode int
+}
+
+type webSetting struct {
 }
 
 func defaultSetting() setting {
 	return setting{
-		Port:       10001,
-		DefGroup:   "api",
-		StartDelay: 5,
+		Port:        10001,
+		StartDelay:  5,
+		DefGroup:    "api",
+		StaticDir:   "./dist",
+		HistoryMode: 1,
 	}
 }

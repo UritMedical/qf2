@@ -54,10 +54,20 @@ func GetDirectory(path string) string {
 //
 //	@Description: 获取指定目录下面的所有文件
 //	@param path
+//	@return []string
+//	@return error
+func GetFiles(path string) ([]string, error) {
+	return GetFilesByPattern(path, "*")
+}
+
+// GetFilesByPattern
+//
+//	@Description: 获取指定目录下面的所有文件
+//	@param path
 //	@param searchPattern
 //	@return []string
 //	@return error
-func GetFiles(path string, searchPattern string) ([]string, error) {
+func GetFilesByPattern(path string, searchPattern string) ([]string, error) {
 	pattern := filepath.Join(path, searchPattern)
 
 	// 使用通配符查找文件

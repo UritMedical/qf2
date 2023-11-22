@@ -13,12 +13,19 @@ import (
 	"strings"
 )
 
+var dbCaches map[string]*gorm.DB = make(map[string]*gorm.DB)
+
 // NewDb
 //
 //	@Description: 创建数据库
 //	@param cfgSection 配置节点，用于启动多个数据库不用配置
 //	@return *gorm.DB
 func NewDb(cfgSection string) *gorm.DB {
+	// 如果缓存已经存在，则之间返回
+	if cdb, ok := dbCaches[cfgSection]; ok {
+		return cdb
+	}
+
 	setting := loadSetting(cfgSection)
 	gc := gorm.Config{
 		NamingStrategy: schema.NamingStrategy{
@@ -70,5 +77,6 @@ func NewDb(cfgSection string) *gorm.DB {
 	if db == nil {
 		panic(errors.New("unknown db type"))
 	}
+	dbCaches[cfgSection] = db
 	return db
 }

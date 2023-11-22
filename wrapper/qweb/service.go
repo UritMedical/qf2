@@ -6,7 +6,9 @@ import (
 	"github.com/UritMedical/qf2/utils/launcher"
 	"github.com/UritMedical/qf2/utils/qconfig"
 	"github.com/UritMedical/qf2/utils/qerror"
+	"github.com/UritMedical/qf2/utils/qio"
 	"github.com/gin-gonic/gin"
+	"mime"
 	"net/http"
 	"strings"
 	"time"
@@ -25,11 +27,12 @@ func Run(f func(), widget qdefine.QWidget) {
 }
 
 type ginWeb struct {
-	Widget   qdefine.QWidget //启动参数
-	initFunc func()          //初始化方法
-	engine   *gin.Engine     //gin引擎
-	adapter  *adapter        //qf访问器
-	setting  setting         //设置
+	Widget    qdefine.QWidget //启动参数
+	initFunc  func()          //初始化方法
+	engine    *gin.Engine     //gin引擎
+	adapter   *adapter        //qf访问器
+	setting   setting         //设置
+	indexFile string          // 首页文件路径
 }
 
 func (gw *ginWeb) Start() {
@@ -49,8 +52,7 @@ func (gw *ginWeb) Start() {
 	gw.initWidget()
 
 	// 初始化服务
-	gw.engine = gin.Default()
-	gw.engine.Use(gw.getCors()) // 支持跨域
+	gw.initEngine()
 	gw.initRoute()
 
 	// 保存配置
@@ -78,6 +80,32 @@ func (gw *ginWeb) initWidget() {
 	// 绑定业务方法
 	for k, m := range gw.Widget.Modules {
 		m.Reg(k+"/", gw.adapter)
+	}
+}
+
+func (gw *ginWeb) initEngine() {
+	gw.engine = gin.Default()
+	gw.engine.Use(gw.getCors()) // 支持跨域
+	if gw.setting.HistoryMode == 1 {
+		gw.engine.NoRoute(gw.historyMode())
+	}
+	if qio.PathExists(gw.setting.StaticDir) {
+		files, _ := qio.GetFiles(gw.setting.StaticDir)
+		for _, file := range files {
+			key := "/" + qio.GetFileName(file)
+			if key == "/index.html" {
+				key = "/"
+				gw.indexFile = file
+			}
+			if qio.IsFile(file) {
+				gw.engine.StaticFile(key, file)
+			} else {
+				gw.engine.Static(key, file)
+			}
+			if key == "/js" {
+				_ = mime.AddExtensionType(".js", "text/javascript")
+			}
+		}
 	}
 }
 
@@ -183,5 +211,24 @@ func (gw *ginWeb) getCors() gin.HandlerFunc {
 		}
 		// 处理请求
 		c.Next()
+	}
+}
+
+func (gw *ginWeb) historyMode() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		accept := c.Request.Header.Get("Accept")
+		flag := strings.Contains(accept, "text/html")
+		if flag {
+			content, err := qio.ReadAllBytes(gw.indexFile)
+			if (err) != nil {
+				c.Writer.WriteHeader(404)
+				_, _ = c.Writer.WriteString("Not Found")
+				return
+			}
+			c.Writer.WriteHeader(200)
+			c.Writer.Header().Add("Accept", "text/html")
+			_, _ = c.Writer.Write(content)
+			c.Writer.Flush()
+		}
 	}
 }
