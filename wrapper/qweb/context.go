@@ -114,6 +114,18 @@ func (c *context) GetStruct(key string, objType reflect.Type) any {
 	return obj
 }
 
+func (c *context) GetList(listType reflect.Type) any {
+	// 先转为json
+	js, _ := json.Marshal(c.values.Inputs)
+	// 创建新的对象T
+	ptrObj := reflect.New(listType).Interface()
+	// 再反转
+	_ = json.Unmarshal(js, ptrObj)
+	// 返回非指针对象
+	obj := reflect.ValueOf(ptrObj).Elem().Interface()
+	return obj
+}
+
 func (c *context) GetReturnValue() interface{} {
 	return c.values.OutputValue
 }
@@ -127,7 +139,8 @@ func (c *context) loadValues(ginCtx *gin.Context) {
 	contentType := ginCtx.Request.Header.Get("Content-Type")
 	if strings.HasPrefix(contentType, "application/json") {
 		// 处理 JSON 数据
-		if body, e := io.ReadAll(ginCtx.Request.Body); e == nil && len(body) > 0 {
+		body, e := io.ReadAll(ginCtx.Request.Body)
+		if e == nil && len(body) > 0 {
 			err := c.values.loadBody(body)
 			if err != nil {
 				return

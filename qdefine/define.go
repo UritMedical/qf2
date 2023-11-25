@@ -47,6 +47,7 @@ type QContext interface {
 	GetDate(key string) Date
 	GetTime(key string) DateTime
 	GetStruct(key string, objType reflect.Type) any
+	GetList(listType reflect.Type) any
 	GetReturnValue() interface{}
 	SetNewReturnValue(newValue interface{})
 }
