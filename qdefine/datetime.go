@@ -33,6 +33,11 @@ func (d *Date) FromTime(time time.Time) {
 	v, _ := strconv.ParseUint(s, 10, 32)
 	*d = Date(v)
 }
+
+// FromTime
+//
+//	@Description: 通过原生的time赋值
+//	@param time
 func FromTime(time time.Time) (d Date) {
 	t := time.Local()
 	s := fmt.Sprintf("%04d%02d%02d", t.Year(), t.Month(), t.Day())
@@ -90,9 +95,11 @@ func (d Date) MarshalJSON() ([]byte, error) {
 //
 //goland:noinspection GoMixedReceiverTypes
 func (d *Date) UnmarshalJSON(data []byte) error {
-	v, err := qdate.ToNumber(string(data), dateFormat)
+	v, err := qdate.Parse(string(data))
 	if err == nil {
-		*d = Date(v)
+		s := fmt.Sprintf("%04d%02d%02d", v.Year(), v.Month(), v.Day())
+		t, _ := strconv.ParseUint(s, 10, 64)
+		*d = Date(t)
 	}
 	return err
 }
@@ -166,10 +173,10 @@ func (d DateTime) DayLastSecond() DateTime {
 //	@param duration
 //	@return DateTime
 func (d DateTime) Add(duration time.Duration) DateTime {
-	time := d.ToTime()
-	time = time.Add(duration)
+	t := d.ToTime()
+	t = t.Add(duration)
 	var dt DateTime
-	dt.FromTime(time)
+	dt.FromTime(t)
 	return dt
 }
 
@@ -223,8 +230,6 @@ func (d DateTime) ToTime() time.Time {
 //	@Description: 复写json转换
 //	@return []byte
 //	@return error
-//
-//goland:noinspection GoMixedReceiverTypes
 func (d DateTime) MarshalJSON() ([]byte, error) {
 	str := fmt.Sprintf("\"%s\"", d.ToString())
 	return []byte(str), nil
@@ -235,12 +240,12 @@ func (d DateTime) MarshalJSON() ([]byte, error) {
 //	@Description: 复写json转换
 //	@param data
 //	@return error
-//
-//goland:noinspection GoMixedReceiverTypes
 func (d *DateTime) UnmarshalJSON(data []byte) error {
-	v, err := qdate.ToNumber(string(data), dateTimeFormat)
+	v, err := qdate.Parse(string(data))
 	if err == nil {
-		*d = DateTime(v)
+		s := fmt.Sprintf("%04d%02d%02d%02d%02d%02d", v.Year(), v.Month(), v.Day(), v.Hour(), v.Minute(), v.Second())
+		t, _ := strconv.ParseUint(s, 10, 64)
+		*d = DateTime(t)
 	}
 	return err
 }

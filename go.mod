@@ -3,6 +3,7 @@ module github.com/UritMedical/qf2
 go 1.20
 
 require (
+	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/eclipse/paho.mqtt.golang v1.4.3
 	github.com/fatih/color v1.15.0
 	github.com/fhmq/hmq v1.5.0

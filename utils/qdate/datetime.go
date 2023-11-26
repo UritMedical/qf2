@@ -1,9 +1,7 @@
 package qdate
 
 import (
-	"fmt"
-	"regexp"
-	"strconv"
+	"github.com/araddon/dateparse"
 	"strings"
 	"time"
 )
@@ -12,60 +10,11 @@ import (
 //
 //	@Description: 字符串转换为时间
 //	@param valueStr 时间
-//	@param formatStr 格式化串 可以是yyyy/MM/dd HH:mm:ss 或者 yyyy-MM-dd HH:mm:ss:fff等
 //	@return time.Time
 //	@return error
-func Parse(valueStr, formatStr string) (time.Time, error) {
+func Parse(valueStr string) (time.Time, error) {
 	valueStr = strings.Trim(valueStr, "\"")
-	layout := getLayout(formatStr)
-	return time.ParseInLocation(layout, valueStr, time.Now().Location())
-}
-
-// ToNumber
-//
-//	@Description: 将时间字符串转为数值形式，如20230101
-//	@return uint64
-//	@return error
-func ToNumber(valueStr, formatStr string) (uint64, error) {
-	valueStr = strings.Trim(valueStr, "\"")
-	// 才分格式化串
-	layouts := strings.FieldsFunc(formatStr, func(r rune) bool {
-		return r == '-' || r == '/' || r == ' ' || r == ':' ||
-			r == '年' || r == '月' || r == '日' ||
-			r == '时' || r == '分' || r == '秒'
-	})
-	layLen := len(layouts)
-	// 然后从时间字符串中提取所有数值
-	numMap := map[string]string{}
-	exp := regexp.MustCompile(`\d+`).FindAllStringSubmatch(valueStr, -1)
-	tValue, err := strconv.ParseUint(valueStr, 10, 64)
-	// 如果就是存数字，且是时间，则直接返回
-	if len(exp) == 1 && err == nil && (len(valueStr) == 8 || len(valueStr) == 14) {
-		return tValue, nil
-	}
-	for i := 0; i < layLen; i++ {
-		f := "%0" + fmt.Sprintf("%d", len(layouts[i])) + "d"
-		if i < len(exp) && len(exp[i]) > 0 {
-			n, err := strconv.Atoi(exp[i][0])
-			if err == nil {
-				numMap[layouts[i]] = fmt.Sprintf(f, n)
-			}
-		} else {
-			numMap[layouts[i]] = fmt.Sprintf(f, 0)
-		}
-	}
-	// 按照年月日时分秒重新排序
-	final := ""
-	for _, sort := range []string{"yyyy", "yy", "MM", "dd", "HH", "hh", "mm", "ss"} {
-		if m, ok := numMap[sort]; ok {
-			final += m
-		}
-	}
-	// 最后返回数值
-	if final == "00010101" {
-		return 0, nil
-	}
-	return strconv.ParseUint(final, 10, 64)
+	return dateparse.ParseLocal(valueStr)
 }
 
 // ToString

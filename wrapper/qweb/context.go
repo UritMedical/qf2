@@ -85,7 +85,8 @@ func (c *context) GetDate(key string) qdefine.Date {
 	model := struct {
 		Time qdefine.Date
 	}{}
-	err := json.Unmarshal([]byte(c.GetString(key)), &model)
+	js := fmt.Sprintf("{\"Time\":\"%s\"}", c.GetString(key))
+	err := json.Unmarshal([]byte(js), &model)
 	if err != nil {
 		return 0
 	}
@@ -93,12 +94,15 @@ func (c *context) GetDate(key string) qdefine.Date {
 }
 
 func (c *context) GetTime(key string) qdefine.DateTime {
-	var time qdefine.DateTime
-	err := json.Unmarshal([]byte(c.GetString(key)), &time)
+	model := struct {
+		Time qdefine.DateTime
+	}{}
+	js := fmt.Sprintf("{\"Time\":\"%s\"}", c.GetString(key))
+	err := json.Unmarshal([]byte(js), &model)
 	if err != nil {
 		return 0
 	}
-	return time
+	return model.Time
 }
 
 func (c *context) GetStruct(key string, objType reflect.Type) any {
