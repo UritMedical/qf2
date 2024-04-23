@@ -158,7 +158,15 @@ func (gw *ginWeb) apiRequest(ginCtx *gin.Context) {
 			module.OnEndInvoke(ctx.route, ctx)
 		}
 		// 返回
-		gw.returnOk(ginCtx, ctx.GetReturnValue())
+		finalResult := ctx.GetReturnValue()
+		// 如果是文件类型
+		if f, isFile := finalResult.(qdefine.File); isFile {
+			// 下载文件
+			gw.returnFile(ginCtx, f)
+		} else {
+			// 其他
+			gw.returnOk(ginCtx, finalResult)
+		}
 	}
 }
 
@@ -193,6 +201,13 @@ func (gw *ginWeb) returnRefuse(ctx *gin.Context, code int, desc string) {
 		"msg":    strings.Trim(desc, " "),
 		"code":   code,
 	})
+}
+
+func (gw *ginWeb) returnFile(ctx *gin.Context, file qdefine.File) {
+	ctx.Header("Content-Disposition", "attachment;filename="+qio.GetFileName(file.Name))
+	ctx.Header("Content-Transfer-Encoding", "binary")
+	ctx.Header("Content-Type", "application/octet-stream")
+	ctx.Data(http.StatusOK, "application/octet-stream", file.Data)
 }
 
 func (gw *ginWeb) getCors() gin.HandlerFunc {
