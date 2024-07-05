@@ -48,6 +48,7 @@ type QContext interface {
 	GetTime(key string) DateTime
 	GetStruct(key string, objType reflect.Type) any
 	GetList(listType reflect.Type) any
+	GetFiles(key string) []File
 	GetReturnValue() interface{}
 	SetNewReturnValue(newValue interface{})
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gobeam/stringy"
 	"io"
+	"mime/multipart"
 	"reflect"
 	"strconv"
 	"strings"
@@ -130,6 +131,15 @@ func (c *context) GetList(listType reflect.Type) any {
 	return obj
 }
 
+func (c *context) GetFiles(key string) []qdefine.File {
+	value := c.values.getValue(key)
+	// 返回
+	if files, ok := value.([]qdefine.File); ok {
+		return files
+	}
+	return nil
+}
+
 func (c *context) GetReturnValue() interface{} {
 	return c.values.OutputValue
 }
@@ -165,6 +175,23 @@ func (c *context) loadValues(ginCtx *gin.Context) {
 				c.values.setInputValue(key, value[0])
 			}
 		}
+		// 将文件加入到字典中
+		for key, value := range form.File {
+			files := make([]qdefine.File, 0)
+			for i := 0; i < len(value); i++ {
+				// 读取文件
+				buffs, err := readFile(value[i])
+				if err != nil {
+					continue
+				}
+				files = append(files, qdefine.File{
+					Name: value[i].Filename,
+					Size: value[i].Size,
+					Data: buffs,
+				})
+			}
+			c.values.setInputValue(key, files)
+		}
 	}
 	// 解析Query
 	for k, v := range ginCtx.Request.URL.Query() {
@@ -182,6 +209,22 @@ func (c *context) loadValues(ginCtx *gin.Context) {
 			c.values.setInputValue(k, v[0])
 		}
 	}
+}
+
+func readFile(file *multipart.FileHeader) ([]byte, error) {
+	f, err := file.Open()
+	defer func(f multipart.File) {
+		_ = f.Close()
+	}(f)
+	if err != nil {
+		return nil, err
+	}
+	buffs := make([]byte, file.Size)
+	_, err = f.Read(buffs)
+	if err != nil {
+		return nil, err
+	}
+	return buffs, nil
 }
 
 type values struct {
