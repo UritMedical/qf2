@@ -55,9 +55,6 @@ func (gw *ginWeb) Start() {
 	gw.initEngine()
 	gw.initRoute()
 
-	// 保存配置
-	_ = qconfig.Save()
-
 	// 启动服务
 	go func() {
 		err := gw.engine.Run(fmt.Sprintf(":%d", gw.setting.Port))
@@ -89,8 +86,8 @@ func (gw *ginWeb) initEngine() {
 	if gw.setting.HistoryMode == 1 {
 		gw.engine.NoRoute(gw.historyMode())
 	}
-	if qio.PathExists(gw.setting.StaticDir) {
-		files, _ := qio.GetFiles(gw.setting.StaticDir)
+	if qio.PathExists(gw.setting.WebDir) {
+		files, _ := qio.GetFiles(gw.setting.WebDir)
 		for _, file := range files {
 			key := "/" + qio.GetFileName(file)
 			if key == "/index.html" {
@@ -104,6 +101,15 @@ func (gw *ginWeb) initEngine() {
 			}
 			if key == "/js" {
 				_ = mime.AddExtensionType(".js", "text/javascript")
+			}
+		}
+	}
+	if qio.PathExists(gw.setting.StaticDir) {
+		files, _ := qio.GetFiles(gw.setting.StaticDir)
+		for _, file := range files {
+			if qio.IsFile(file) == false {
+				key := "/" + qio.GetFileName(file)
+				gw.engine.Static(key, file)
 			}
 		}
 	}

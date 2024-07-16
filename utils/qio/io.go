@@ -60,6 +60,27 @@ func GetFiles(path string) ([]string, error) {
 	return GetFilesByPattern(path, "*")
 }
 
+// GetFolders
+//
+//	@Description: 获取指定目录下面的所有文件夹
+//	@param path
+//	@return []string
+//	@return error
+func GetFolders(path string) ([]string, error) {
+	entries, err := os.ReadDir(path)
+	if err != nil {
+		return nil, err
+	}
+
+	dirs := make([]string, 0)
+	for _, entry := range entries {
+		if entry.IsDir() {
+			dirs = append(dirs, entry.Name())
+		}
+	}
+	return dirs, nil
+}
+
 // GetFilesByPattern
 //
 //	@Description: 获取指定目录下面的所有文件
@@ -68,19 +89,22 @@ func GetFiles(path string) ([]string, error) {
 //	@return []string
 //	@return error
 func GetFilesByPattern(path string, searchPattern string) ([]string, error) {
-	pattern := filepath.Join(path, searchPattern)
+	var files []string
 
-	// 使用通配符查找文件
-	matches, err := filepath.Glob(pattern)
+	err := filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		files = append(files, path)
+
+		return nil
+	})
+
 	if err != nil {
 		return nil, err
 	}
 
-	files := make([]string, 0)
-	// 遍历匹配的文件
-	for _, match := range matches {
-		files = append(files, match)
-	}
 	return files, nil
 }
 

@@ -14,6 +14,7 @@ type setting struct {
 	StartDelay  int
 	DefGroup    string
 	StaticDir   string
+	WebDir      string
 	HistoryMode int
 }
 
@@ -25,7 +26,8 @@ func defaultSetting() setting {
 		Port:        10001,
 		StartDelay:  5,
 		DefGroup:    "api",
-		StaticDir:   "./dist",
+		StaticDir:   "./assets",
+		WebDir:      "./dist",
 		HistoryMode: 1,
 	}
 }

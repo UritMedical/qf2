@@ -14,11 +14,6 @@ var (
 	dateTimeFormat = "" // 日期时间掩码
 )
 
-func init() {
-	dateFormat = qconfig.Get("Other.DateMask", "yyyy-MM-dd")
-	dateTimeFormat = qconfig.Get("Other.DateTimeMask", "yyyy-MM-dd HH:mm:ss")
-}
-
 type Date uint32
 
 // FromTime
@@ -52,6 +47,9 @@ func FromTime(time time.Time) (d Date) {
 //
 //goland:noinspection GoMixedReceiverTypes
 func (d Date) ToString() string {
+	if dateFormat == "" {
+		dateFormat = qconfig.Get("Other.DateMask", "yyyy-MM-dd")
+	}
 	return qdate.ToString(d.ToTime(), dateFormat)
 }
 
@@ -199,6 +197,9 @@ func (d DateTime) Date() Date {
 //
 //goland:noinspection GoMixedReceiverTypes
 func (d DateTime) ToString() string {
+	if dateTimeFormat == "" {
+		dateTimeFormat = qconfig.Get("Other.DateTimeMask", "yyyy-MM-dd HH:mm:ss")
+	}
 	return qdate.ToString(d.ToTime(), dateTimeFormat)
 }
 
